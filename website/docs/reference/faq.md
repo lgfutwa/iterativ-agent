@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "FAQ & Troubleshooting"
-description: "Frequently asked questions and solutions to common issues with Hermes Agent"
+description: "Frequently asked questions and solutions to common issues with Iterativ Agent"
 ---
 
 # FAQ & Troubleshooting
@@ -12,9 +12,9 @@ Quick answers and fixes for the most common questions and issues.
 
 ## Frequently Asked Questions
 
-### What LLM providers work with Hermes?
+### What LLM providers work with Iterativ?
 
-Hermes Agent works with any OpenAI-compatible API. Supported providers include:
+Iterativ Agent works with any OpenAI-compatible API. Supported providers include:
 
 - **[OpenRouter](https://openrouter.ai/)** — access hundreds of models through one API key (recommended for flexibility)
 - **Nous Portal** — Nous Research's own inference endpoint
@@ -30,7 +30,7 @@ Set your provider with `hermes model` or by editing `~/.hermes/.env`. See the [E
 
 ### Does it work on Windows?
 
-**Not natively.** Hermes Agent requires a Unix-like environment. On Windows, install [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) and run Hermes from inside it. The standard install command works perfectly in WSL2:
+**Not natively.** Iterativ Agent requires a Unix-like environment. On Windows, install [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) and run Hermes from inside it. The standard install command works perfectly in WSL2:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
@@ -70,7 +70,7 @@ Important caveat: the full `.[all]` extra is not currently available on Android 
 
 ### Is my data sent anywhere?
 
-API calls go **only to the LLM provider you configure** (e.g., OpenRouter, your local Ollama instance). Hermes Agent does not collect telemetry, usage data, or analytics. Your conversations, memory, and skills are stored locally in `~/.hermes/`.
+API calls go **only to the LLM provider you configure** (e.g., OpenRouter, your local Ollama instance). Iterativ Agent does not collect telemetry, usage data, or analytics. Your conversations, memory, and skills are stored locally in `~/.hermes/`.
 
 ### Can I use it offline / with local models?
 
@@ -108,7 +108,7 @@ Hermes auto-detects local endpoints and relaxes streaming timeouts (read timeout
 
 ### How much does it cost?
 
-Hermes Agent itself is **free and open-source** (MIT license). You pay only for the LLM API usage from your chosen provider. Local models are completely free to run.
+Iterativ Agent itself is **free and open-source** (MIT license). You pay only for the LLM API usage from your chosen provider. Local models are completely free to run.
 
 ### Can multiple people use one instance?
 

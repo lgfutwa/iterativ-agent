@@ -27,21 +27,21 @@ export function SidebarStatusStrip() {
       className={cn(
         "block text-left",
         "px-5 pb-2 pt-0.5",
-        "text-muted-foreground/70",
-        "transition-colors hover:text-muted-foreground/90",
-        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-midground/40",
+        "text-stone-500",
+        "transition-colors hover:text-stone-700",
+        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-700/40",
         "focus-visible:ring-inset",
       )}
     >
-      <div className="flex flex-col gap-1 font-mondwest text-[0.55rem] leading-snug tracking-[0.12em]">
+      <div className="flex flex-col gap-1 text-[0.72rem] leading-snug tracking-normal">
         <p className="break-words">
-          <span className="text-muted-foreground/50">{gatewayStatusLabel}</span>{" "}
+          <span className="text-stone-400">{gatewayStatusLabel}</span>{" "}
           <span className={cn("font-medium", gw.tone)}>{gw.label}</span>
         </p>
 
         <p className="break-words">
-          <span className="text-muted-foreground/50">{activeSessionsLabel}</span>{" "}
-          <span className="tabular-nums text-muted-foreground/70">
+          <span className="text-stone-400">{activeSessionsLabel}</span>{" "}
+          <span className="tabular-nums text-stone-600">
             {status.active_sessions}
           </span>
         </p>

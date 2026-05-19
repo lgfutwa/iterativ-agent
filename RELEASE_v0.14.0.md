@@ -1,4 +1,4 @@
-# Hermes Agent v0.14.0 (v2026.5.16)
+# Iterativ Agent v0.14.0 (v2026.5.16)
 
 **Release Date:** May 16, 2026
 **Since v0.13.0:** 808 commits · 633 merged PRs · 1393 files changed · 165,061 insertions · 545 issues closed (12 P0, 50 P1) · 215 community contributors (including co-authors)

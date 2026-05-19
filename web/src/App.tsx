@@ -18,7 +18,9 @@ import {
   Activity,
   BarChart3,
   BookOpen,
+  Brain,
   Clock,
+  Cloud,
   Code,
   Cpu,
   Database,
@@ -26,10 +28,12 @@ import {
   Eye,
   FileText,
   Globe,
+  GitBranch,
   Heart,
   KeyRound,
   Menu,
   MessageSquare,
+  MonitorCog,
   Package,
   Puzzle,
   RotateCw,
@@ -49,7 +53,6 @@ import { SelectionSwitcher } from "@nous-research/ui/ui/components/selection-swi
 import { Spinner } from "@nous-research/ui/ui/components/spinner";
 import { Typography } from "@/components/NouiTypography";
 import { cn } from "@/lib/utils";
-import { Backdrop } from "@/components/Backdrop";
 import { SidebarFooter } from "@/components/SidebarFooter";
 import { SidebarStatusStrip } from "@/components/SidebarStatusStrip";
 import { PageHeaderProvider } from "@/contexts/PageHeaderProvider";
@@ -67,6 +70,11 @@ import ProfilesPage from "@/pages/ProfilesPage";
 import SkillsPage from "@/pages/SkillsPage";
 import PluginsPage from "@/pages/PluginsPage";
 import ChatPage from "@/pages/ChatPage";
+import ComputerPage from "@/pages/ComputerPage";
+import MultiModelPage from "@/pages/MultiModelPage";
+import WorkflowPage from "@/pages/WorkflowPage";
+import SetupWizard from "@/pages/SetupWizard";
+import CloudPage from "@/pages/CloudPage";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useI18n } from "@/i18n";
@@ -78,7 +86,7 @@ import { isDashboardEmbeddedChatEnabled } from "@/lib/dashboard-flags";
 import { api } from "@/lib/api";
 
 function RootRedirect() {
-  return <Navigate to="/sessions" replace />;
+  return <Navigate to="/computer" replace />;
 }
 
 function UnknownRouteFallback({ pluginsLoading }: { pluginsLoading: boolean }) {
@@ -86,13 +94,12 @@ function UnknownRouteFallback({ pluginsLoading }: { pluginsLoading: boolean }) {
     // Render nothing during the plugin-load window — a spinner here would just flash.
     return null;
   }
-  return <Navigate to="/sessions" replace />;
+  return <Navigate to="/computer" replace />;
 }
 
 const CHAT_NAV_ITEM: NavItem = {
   path: "/chat",
-  labelKey: "chat",
-  label: "Chat",
+  label: "Workspace",
   icon: Terminal,
 };
 
@@ -107,9 +114,14 @@ const CHAT_NAV_ITEM: NavItem = {
  */
 const BUILTIN_ROUTES_CORE: Record<string, ComponentType> = {
   "/": RootRedirect,
+  "/computer": ComputerPage,
   "/sessions": SessionsPage,
   "/analytics": AnalyticsPage,
   "/models": ModelsPage,
+  "/multimodel": MultiModelPage,
+  "/workflows": WorkflowPage,
+  "/cloud": CloudPage,
+  "/setup": SetupWizard,
   "/logs": LogsPage,
   "/cron": CronPage,
   "/skills": SkillsPage,
@@ -130,6 +142,11 @@ function ChatRouteSink() {
 
 const BUILTIN_NAV_REST: NavItem[] = [
   {
+    path: "/computer",
+    label: "Computer",
+    icon: MonitorCog,
+  },
+  {
     path: "/sessions",
     labelKey: "sessions",
     label: "Sessions",
@@ -147,17 +164,70 @@ const BUILTIN_NAV_REST: NavItem[] = [
     label: "Models",
     icon: Cpu,
   },
-  { path: "/logs", labelKey: "logs", label: "Logs", icon: FileText },
-  { path: "/cron", labelKey: "cron", label: "Cron", icon: Clock },
-  { path: "/skills", labelKey: "skills", label: "Skills", icon: Package },
-  { path: "/plugins", labelKey: "plugins", label: "Plugins", icon: Puzzle },
-  { path: "/profiles", labelKey: "profiles", label: "Profiles", icon: Users },
-  { path: "/config", labelKey: "config", label: "Config", icon: Settings },
-  { path: "/env", labelKey: "keys", label: "Keys", icon: KeyRound },
+  {
+    path: "/multimodel",
+    labelKey: "multimodel",
+    label: "Multi-Model",
+    icon: Brain,
+  },
+  {
+    path: "/workflows",
+    labelKey: "workflows",
+    label: "Workflows",
+    icon: GitBranch,
+  },
+  {
+    path: "/cloud",
+    labelKey: "cloud",
+    label: "Cloud",
+    icon: Cloud,
+  },
+  {
+    path: "/logs",
+    labelKey: "logs",
+    label: "Logs",
+    icon: FileText,
+  },
+  {
+    path: "/cron",
+    labelKey: "cron",
+    label: "Cron",
+    icon: Clock,
+  },
+  {
+    path: "/skills",
+    labelKey: "skills",
+    label: "Skills",
+    icon: Puzzle,
+  },
+  {
+    path: "/plugins",
+    labelKey: "plugins",
+    label: "Plugins",
+    icon: Package,
+  },
+  {
+    path: "/profiles",
+    labelKey: "profiles",
+    label: "Profiles",
+    icon: Users,
+  },
+  {
+    path: "/config",
+    labelKey: "config",
+    label: "Config",
+    icon: Settings,
+  },
+  {
+    path: "/env",
+    labelKey: "env",
+    label: "Environment",
+    icon: KeyRound,
+  },
   {
     path: "/docs",
-    labelKey: "documentation",
-    label: "Documentation",
+    labelKey: "docs",
+    label: "Docs",
     icon: BookOpen,
   },
 ];
@@ -185,6 +255,7 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   Star,
   Code,
   Eye,
+  MonitorCog,
 };
 
 function resolveIcon(name: string): ComponentType<{ className?: string }> {
@@ -416,18 +487,17 @@ export default function App() {
   return (
     <div
       data-layout-variant={layoutVariant}
-      className="font-mondwest flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-black uppercase text-midground antialiased"
+      className="computer-ui-shell flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[var(--studio-surface)] font-sans text-[var(--studio-text)] antialiased"
     >
       <SelectionSwitcher />
-      <Backdrop />
       <PluginSlot name="backdrop" />
 
       <header
         className={cn(
           "lg:hidden fixed top-0 left-0 right-0 z-40 min-h-14",
           "flex items-center gap-2 px-4 py-2",
-          "border-b border-current/20",
-          "bg-background-base/90 backdrop-blur-sm",
+          "border-b border-[var(--studio-border-subtle)]",
+          "bg-[var(--studio-surface)]/95 backdrop-blur-sm",
         )}
         style={{
           background: "var(--component-header-background)",
@@ -442,16 +512,15 @@ export default function App() {
           aria-label={t.app.openNavigation}
           aria-expanded={mobileOpen}
           aria-controls="app-sidebar"
-          className="text-midground/70 hover:text-midground"
+          className="text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]"
         >
           <Menu />
         </Button>
 
         <Typography
-          className="font-bold text-[0.95rem] leading-[0.95] tracking-[0.05em] text-midground"
-          style={{ mixBlendMode: "plus-lighter" }}
+          className="font-sans text-[0.95rem] font-semibold leading-[1] tracking-normal text-[var(--studio-text)]"
         >
-          {t.app.brand}
+          Iterativ Studio
         </Typography>
       </header>
 
@@ -475,9 +544,9 @@ export default function App() {
             id="app-sidebar"
             aria-label={t.app.navigation}
             className={cn(
-              "fixed top-0 left-0 z-50 flex h-dvh max-h-dvh w-64 min-h-0 flex-col",
-              "border-r border-current/20",
-              "bg-background-base/95 backdrop-blur-sm",
+              "computer-sidebar fixed top-0 left-0 z-50 flex h-dvh max-h-dvh w-64 min-h-0 flex-col",
+              "border-r border-[var(--studio-border-subtle)]",
+              "bg-[var(--studio-surface-subtle)]/95 backdrop-blur-sm",
               "transition-transform duration-200 ease-out",
               mobileOpen ? "translate-x-0" : "-translate-x-full",
               "lg:sticky lg:top-0 lg:translate-x-0 lg:shrink-0",
@@ -491,19 +560,18 @@ export default function App() {
             <div
               className={cn(
                 "flex h-14 shrink-0 items-center justify-between gap-2 px-4",
-                "border-b border-current/20",
+                "border-b border-[var(--studio-border-subtle)]",
               )}
             >
               <div className="flex items-center gap-2">
                 <PluginSlot name="header-left" />
 
                 <Typography
-                  className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground"
-                  style={{ mixBlendMode: "plus-lighter" }}
+                  className="font-sans text-[1.05rem] font-semibold leading-[1.05] tracking-normal text-[var(--studio-text)]"
                 >
-                  Hermes
+                  Iterativ
                   <br />
-                  Agent
+                  Studio
                 </Typography>
               </div>
 
@@ -512,14 +580,14 @@ export default function App() {
                 size="icon"
                 onClick={closeMobile}
                 aria-label={t.app.closeNavigation}
-                className="lg:hidden text-midground/70 hover:text-midground"
+                className="lg:hidden text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]"
               >
                 <X />
               </Button>
             </div>
 
             <nav
-              className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden border-t border-current/10 py-2"
+              className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden border-t border-[var(--studio-border-subtle)] py-2"
               aria-label={t.app.navigation}
             >
               <ul className="flex flex-col">
@@ -536,13 +604,13 @@ export default function App() {
               {sidebarNav.pluginItems.length > 0 && (
                 <div
                   aria-labelledby="hermes-sidebar-plugin-nav-heading"
-                  className="flex flex-col border-t border-current/10 pb-2"
+                  className="flex flex-col border-t border-[var(--studio-border-subtle)] pb-2"
                   role="group"
                 >
                   <span
                     className={cn(
                       "px-5 pt-2.5 pb-1",
-                      "font-mondwest text-[0.6rem] tracking-[0.15em] uppercase opacity-30",
+                      "text-[0.68rem] font-medium tracking-normal text-[var(--studio-text-soft)]",
                     )}
                     id="hermes-sidebar-plugin-nav-heading"
                   >
@@ -569,7 +637,7 @@ export default function App() {
               className={cn(
                 "flex shrink-0 items-center justify-between gap-2",
                 "px-3 py-2",
-                "border-t border-current/20",
+                "border-t border-[var(--studio-border-subtle)]",
               )}
             >
               <div className="flex min-w-0 items-center gap-2">
@@ -589,7 +657,9 @@ export default function App() {
                 "px-3 sm:px-6",
                 isChatRoute
                   ? "pb-0 pt-1 sm:pt-2 lg:pt-4"
-                  : "pt-2 sm:pt-4 lg:pt-6",
+                  : normalizedPath === "/computer"
+                    ? "px-0 pt-0 sm:px-0 sm:pt-0 lg:px-0 lg:pt-0"
+                    : "pt-2 sm:pt-4 lg:pt-6",
                 isDocsRoute && "min-h-0 flex-1",
               )}
             >
@@ -670,36 +740,26 @@ function SidebarNavLink({ closeMobile, item, t }: SidebarNavLinkProps) {
         className={({ isActive }) =>
           cn(
             "group relative flex items-center gap-3",
-            "px-5 py-2.5",
-            "font-mondwest text-[0.8rem] tracking-[0.12em]",
+            "mx-2 rounded-[8px] px-3 py-2.5",
+            "text-[0.9rem] font-medium tracking-normal",
             "whitespace-nowrap transition-colors cursor-pointer",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-midground",
-            isActive ? "text-midground" : "opacity-60 hover:opacity-100",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--studio-focus)]",
+            isActive
+              ? "bg-[var(--studio-border-subtle)] text-[var(--studio-text)]"
+              : "text-[var(--studio-text-muted)] hover:bg-[var(--studio-surface)] hover:text-[var(--studio-text)]",
           )
         }
         style={{
           clipPath: "var(--component-tab-clip-path)",
         }}
       >
-        {({ isActive }) => (
-          <>
-            <Icon className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{navLabel}</span>
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="truncate">{navLabel}</span>
 
-            <span
-              aria-hidden
-              className="absolute inset-y-0.5 left-1.5 right-1.5 bg-midground opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-5"
-            />
-
-            {isActive && (
-              <span
-                aria-hidden
-                className="absolute left-0 top-0 bottom-0 w-px bg-midground"
-                style={{ mixBlendMode: "plus-lighter" }}
-              />
-            )}
-          </>
-        )}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0.5 left-1.5 right-1.5 opacity-0"
+        />
       </NavLink>
     </li>
   );
@@ -739,14 +799,14 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
     <div
       className={cn(
         "shrink-0 flex flex-col",
-        "border-t border-current/10",
+        "border-t border-[var(--studio-border-subtle)]",
         "py-1",
       )}
     >
       <span
         className={cn(
           "px-5 pt-0.5 pb-0.5",
-          "font-mondwest text-[0.6rem] tracking-[0.15em] uppercase opacity-30",
+          "text-[0.68rem] font-medium tracking-normal text-[var(--studio-text-soft)]",
         )}
       >
         {t.app.system}
@@ -771,12 +831,12 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
                 aria-busy={busy}
                 active={busy}
                 className={cn(
-                  "gap-3 px-5 py-1.5 whitespace-nowrap",
-                  "font-mondwest text-[0.75rem] tracking-[0.1em]",
+                  "mx-2 gap-3 rounded-[8px] px-3 py-2 whitespace-nowrap",
+                  "text-[0.85rem] font-medium tracking-normal",
                   "transition-opacity",
                   busy
-                    ? "text-midground opacity-100"
-                    : "opacity-60 hover:opacity-100",
+                    ? "bg-[var(--studio-border-subtle)] text-[var(--studio-text)] opacity-100"
+                    : "text-[var(--studio-text-muted)] opacity-100 hover:bg-[var(--studio-surface)] hover:text-[var(--studio-text)]",
                   "disabled:opacity-30",
                 )}
               >
@@ -787,7 +847,7 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
                 ) : (
                   <Icon
                     className={cn(
-                      "h-3.5 w-3.5 shrink-0",
+                      "h-4 w-4 shrink-0",
                       isActionRunning && !spin && "animate-pulse",
                     )}
                   />
@@ -797,16 +857,8 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
 
                 <span
                   aria-hidden
-                  className="absolute inset-y-0.5 left-1.5 right-1.5 bg-midground opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-5"
+                  className="pointer-events-none absolute inset-y-0.5 left-1.5 right-1.5 opacity-0"
                 />
-
-                {busy && (
-                  <span
-                    aria-hidden
-                    className="absolute left-0 top-0 bottom-0 w-px bg-midground"
-                    style={{ mixBlendMode: "plus-lighter" }}
-                  />
-                )}
               </ListItem>
             </li>
           );

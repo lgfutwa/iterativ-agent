@@ -64,11 +64,11 @@ function generateChannelId(): string {
 // theme, because the TUI's skin engine already paints the content; the
 // terminal chrome just needs to sit quietly inside the dashboard.
 const TERMINAL_THEME = {
-  background: "#0d2626",
-  foreground: "#f0e6d2",
-  cursor: "#f0e6d2",
-  cursorAccent: "#0d2626",
-  selectionBackground: "#f0e6d244",
+  background: "#11110f",
+  foreground: "#f5f1e8",
+  cursor: "#5eead4",
+  cursorAccent: "#11110f",
+  selectionBackground: "#14b8a644",
 };
 
 /**
@@ -156,7 +156,25 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   // treat the current resume target as part of the PTY identity and rebuild the
   // terminal session when it changes.
   const resumeParam = searchParams.get("resume");
+  const initialPromptParam = searchParams.get("prompt");
   const channel = useMemo(() => generateChannelId(), [resumeParam]);
+  const pendingInitialPromptRef = useRef<string | null>(null);
+  const sentInitialPromptRef = useRef<string | null>(null);
+
+  const sendPromptToPty = useCallback((text: string): boolean => {
+    const clean = text.trim();
+    const ws = wsRef.current;
+    if (!clean || !ws || ws.readyState !== WebSocket.OPEN) return false;
+    ws.send(clean);
+    setTimeout(() => {
+      const current = wsRef.current;
+      if (current && current.readyState === WebSocket.OPEN) {
+        current.send("\r");
+      }
+    }, 120);
+    termRef.current?.focus();
+    return true;
+  }, []);
 
   useEffect(() => {
     if (!resumeParam) return;
@@ -182,6 +200,28 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       cancelled = true;
     };
   }, [resumeParam, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const clean = initialPromptParam?.trim();
+    if (!isActive || !clean) return;
+    if (sentInitialPromptRef.current === clean) return;
+
+    pendingInitialPromptRef.current = clean;
+    if (!sendPromptToPty(clean)) return;
+
+    sentInitialPromptRef.current = clean;
+    pendingInitialPromptRef.current = null;
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("prompt");
+    setSearchParams(next, { replace: true });
+  }, [
+    initialPromptParam,
+    isActive,
+    searchParams,
+    sendPromptToPty,
+    setSearchParams,
+  ]);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023px)");
@@ -561,6 +601,15 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       // follow up with the authoritative measurement — at worst Ink
       // reflows once after the PTY boots, which is imperceptible.
       ws.send(`\x1b[RESIZE:${term.cols};${term.rows}]`);
+      const queued = pendingInitialPromptRef.current;
+      if (queued && sentInitialPromptRef.current !== queued) {
+        setTimeout(() => {
+          if (sendPromptToPty(queued)) {
+            sentInitialPromptRef.current = queued;
+            pendingInitialPromptRef.current = null;
+          }
+        }, 500);
+      }
     };
 
     ws.onmessage = (ev) => {
@@ -650,7 +699,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         copyResetRef.current = null;
       }
     };
-  }, [channel, resumeParam]);
+  }, [channel, resumeParam, sendPromptToPty]);
 
   // When the user returns to the chat tab (isActive: false → true), the
   // terminal host just transitioned from display:none to display:flex.
@@ -803,11 +852,11 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         <div
           className={cn(
             "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg",
-            "p-2 sm:p-3",
+            "border border-stone-800 p-2 sm:p-3",
           )}
           style={{
             backgroundColor: TERMINAL_THEME.background,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 24px 80px rgba(28, 25, 23, 0.28)",
           }}
         >
           <div

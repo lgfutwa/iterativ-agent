@@ -10,6 +10,22 @@ from dotenv import load_dotenv
 from utils import atomic_replace
 
 
+def get_multi_model_routing_config() -> dict:
+    """Read multi-model routing configuration from environment variables.
+    
+    Returns:
+        Dict with keys:
+        - enabled (bool): Whether multi-model routing is enabled
+        - cost_optimization (bool): Whether to optimize for cost
+        - quality_priority (bool): Whether to prioritize quality
+    """
+    return {
+        "enabled": os.environ.get("HERMES_MULTI_MODEL_ROUTING", "").lower() in ("true", "1", "yes"),
+        "cost_optimization": os.environ.get("HERMES_MULTI_MODEL_COST_OPTIMIZATION", "true").lower() in ("true", "1", "yes"),
+        "quality_priority": os.environ.get("HERMES_MULTI_MODEL_QUALITY_PRIORITY", "false").lower() in ("true", "1", "yes"),
+    }
+
+
 # Env var name suffixes that indicate credential values.  These are the
 # only env vars whose values we sanitize on load — we must not silently
 # alter arbitrary user env vars, but credentials are known to require

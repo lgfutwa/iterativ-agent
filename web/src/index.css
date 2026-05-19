@@ -117,6 +117,205 @@ code, kbd, pre, samp, .font-mono, .font-mono-ui {
   overflow: hidden;
 }
 
+/* Google AI Studio-inspired dashboard shell. Clean, minimalist design
+   with light background and subtle shadows. */
+.computer-ui-shell {
+  --theme-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --theme-font-display: var(--theme-font-sans);
+  --theme-letter-spacing: 0;
+  --studio-ink: #111827;
+  --studio-on-ink: #ffffff;
+  --studio-secondary: #5f6b7a;
+  --studio-blue: #1a73e8;
+  --studio-blue-soft: #e8f0fe;
+  --studio-success: #188038;
+  --studio-warning: #f9ab00;
+  --studio-danger: #d93025;
+  --studio-surface: #ffffff;
+  --studio-surface-subtle: #f8fafc;
+  --studio-surface-raised: #ffffff;
+  --studio-border: #dadce0;
+  --studio-border-subtle: #e8eaed;
+  --studio-text: #111827;
+  --studio-text-muted: #5f6b7a;
+  --studio-text-soft: #8993a3;
+  --studio-focus: #8ab4f8;
+  --studio-radius-sm: 8px;
+  --studio-radius-md: 14px;
+  --studio-radius-lg: 28px;
+  --studio-radius-pill: 999px;
+  --background-base: var(--studio-surface);
+  --background: var(--studio-surface);
+  --midground-base: var(--studio-ink);
+  --midground: var(--studio-ink);
+  --foreground-base: var(--studio-text);
+  --foreground: var(--studio-text);
+  --warm-glow: transparent;
+  --noise-opacity-mul: 0;
+  --component-backdrop-filler-opacity: 0;
+  color-scheme: light;
+}
+
+.computer-sidebar {
+  box-shadow: none;
+  border-right: 1px solid var(--studio-border-subtle);
+}
+
+.computer-hero-panel,
+.computer-side-panel {
+  border-radius: var(--studio-radius-sm);
+  box-shadow: none;
+  border: 1px solid var(--studio-border-subtle);
+}
+
+.computer-page {
+  font-family: var(--theme-font-sans);
+  letter-spacing: 0;
+  background: var(--studio-surface);
+  color: var(--studio-text);
+}
+
+.computer-composer-shell {
+  border-radius: var(--studio-radius-lg);
+  padding: 1px;
+  background:
+    linear-gradient(var(--studio-surface), var(--studio-surface)) padding-box,
+    linear-gradient(95deg, #8ab4f8 0%, #c6e7d4 34%, #fdd663 67%, #f6aea9 100%)
+      border-box;
+  border: 1px solid transparent;
+  box-shadow:
+    0 20px 54px rgba(60, 64, 67, 0.12),
+    0 2px 6px rgba(60, 64, 67, 0.08);
+}
+
+.computer-composer-inner {
+  border-radius: calc(var(--studio-radius-lg) - 1px);
+  background: var(--studio-surface-raised);
+  box-shadow: inset 0 0 0 1px rgba(218, 220, 224, 0.45);
+}
+
+.studio-brand-mark {
+  border: 1px solid color-mix(in srgb, var(--studio-blue) 18%, white);
+  background: var(--studio-blue-soft);
+  color: var(--studio-blue);
+}
+
+.studio-icon-button,
+.studio-pill,
+.studio-chip,
+.studio-status-pill,
+.studio-secondary-action {
+  border: 1px solid var(--studio-border-subtle);
+  background: var(--studio-surface-raised);
+  color: var(--studio-text-muted);
+  box-shadow:
+    0 1px 2px rgba(60, 64, 67, 0.12),
+    0 1px 3px rgba(60, 64, 67, 0.08);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.studio-icon-button,
+.studio-pill,
+.studio-secondary-action {
+  border-radius: var(--studio-radius-pill);
+}
+
+.studio-icon-button:hover,
+.studio-pill:hover,
+.studio-chip:hover,
+.studio-secondary-action:hover {
+  border-color: color-mix(in srgb, var(--studio-blue) 22%, var(--studio-border));
+  background: color-mix(in srgb, var(--studio-blue-soft) 42%, white);
+  color: var(--studio-text);
+}
+
+.studio-icon-button:focus-visible,
+.studio-pill:focus-visible,
+.studio-chip:focus-visible,
+.studio-status-pill:focus-visible,
+.studio-secondary-action:focus-visible {
+  outline: 0;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--studio-focus) 42%, transparent),
+    0 1px 2px rgba(60, 64, 67, 0.12);
+}
+
+.studio-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+}
+
+.studio-pill,
+.studio-secondary-action,
+.studio-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.studio-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  max-width: 100%;
+  border-radius: var(--studio-radius-pill);
+}
+
+.studio-primary-action {
+  border-radius: var(--studio-radius-pill);
+  background: var(--studio-ink);
+  color: var(--studio-on-ink);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.16);
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.studio-primary-action:hover {
+  background: color-mix(in srgb, var(--studio-ink) 88%, white);
+}
+
+.studio-primary-action:focus-visible {
+  outline: 0;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--studio-focus) 44%, transparent),
+    0 1px 2px rgba(17, 24, 39, 0.16);
+}
+
+.studio-muted-copy {
+  color: var(--studio-text-muted);
+}
+
+.studio-soft-copy {
+  color: var(--studio-text-soft);
+}
+
+.studio-interactive-blue {
+  color: var(--studio-blue);
+}
+
+.computer-ui-shell,
+.computer-ui-shell .font-sans,
+.computer-ui-shell textarea,
+.computer-ui-shell button {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif !important;
+  letter-spacing: 0;
+}
+
 /* Nousnet's hermes-agent layout bumps `small` and `code` to readable
    dashboard sizes. Keep in sync. */
 small { font-size: 1.0625rem; }
@@ -130,30 +329,30 @@ code { font-size: 0.875rem; }
 @theme inline {
   /* Remap foreground to midground so `text-foreground` / `bg-foreground`
      stay visible — in LENS_0, `--foreground` itself has alpha 0. */
-  --color-foreground: var(--midground);
+  --color-foreground: var(--midground-base);
 
   --color-card: color-mix(in srgb, var(--midground-base) 4%, var(--background-base));
-  --color-card-foreground: var(--midground);
-  --color-primary: var(--midground);
+  --color-card-foreground: var(--foreground-base);
+  --color-primary: var(--midground-base);
   --color-primary-foreground: var(--background-base);
-  --color-secondary: color-mix(in srgb, var(--midground-base) 6%, var(--background-base));
-  --color-secondary-foreground: var(--midground);
-  --color-muted: color-mix(in srgb, var(--midground-base) 8%, var(--background-base));
+  --color-secondary: color-mix(in srgb, var(--midground-base) 10%, var(--background-base));
+  --color-secondary-foreground: #6b7280;
+  --color-muted: color-mix(in srgb, var(--midground-base) 30%, var(--background-base));
   --color-muted-foreground: color-mix(in srgb, var(--midground-base) 55%, transparent);
   --color-accent: color-mix(in srgb, var(--midground-base) 10%, var(--background-base));
   --color-accent-foreground: var(--midground);
-  --color-destructive: #fb2c36;
+  --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-success: #4ade80;
-  --color-warning: #ffbd38;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
   --color-border: color-mix(in srgb, var(--midground-base) 15%, transparent);
-  --color-input: color-mix(in srgb, var(--midground-base) 15%, transparent);
+  --color-input: color-mix(in srgb, var(--midground-base) 8%, var(--background-base));
   --color-ring: var(--midground);
   --color-popover: color-mix(in srgb, var(--midground-base) 4%, var(--background-base));
-  --color-popover-foreground: var(--midground);
+  --color-popover-foreground: var(--foreground-base);
 
   --radius-sm: calc(var(--theme-radius) - 4px);
-  --radius-md: calc(var(--theme-radius) - 2px);
+  --radius-md: 16px;
   --radius-lg: var(--theme-radius);
   --radius-xl: calc(var(--theme-radius) + 4px);
 }
@@ -226,4 +425,3 @@ code { font-size: 0.875rem; }
 :root[style*="--theme-asset-bg:"] .theme-default-filler {
   display: none;
 }
-

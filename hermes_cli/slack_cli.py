@@ -44,7 +44,7 @@ def _build_full_manifest(bot_name: str, bot_description: str) -> dict:
         },
         "display_information": {
             "name": bot_name[:35],
-            "description": (bot_description or "Your Hermes agent on Slack")[:140],
+            "description": (bot_description or "Your Iterativ agent on Slack")[:140],
             "background_color": "#1a1a2e",
         },
         "features": {
@@ -114,8 +114,8 @@ def slack_manifest_command(args) -> int:
       --slashes-only  Emit only the ``features.slash_commands`` array (for
                       merging into an existing manifest manually)
     """
-    name = getattr(args, "name", None) or "Hermes"
-    description = getattr(args, "description", None) or "Your Hermes agent on Slack"
+    name = getattr(args, "name", None) or "Iterativ"
+    description = getattr(args, "description", None) or "Your Iterativ agent on Slack"
 
     if getattr(args, "slashes_only", False):
         from hermes_cli.commands import slack_app_manifest

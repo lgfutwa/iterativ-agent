@@ -412,6 +412,10 @@ class AIAgent:
         checkpoint_max_total_size_mb: int = 500,
         checkpoint_max_file_size_mb: int = 10,
         pass_session_id: bool = False,
+        # Multi-model orchestration
+        enable_multi_model_routing: bool = False,
+        multi_model_cost_optimization: bool = True,
+        multi_model_quality_priority: bool = False,
     ):
         """Forwarder — see ``agent.agent_init.init_agent``."""
         from agent.agent_init import init_agent
@@ -481,6 +485,9 @@ class AIAgent:
             checkpoint_max_total_size_mb=checkpoint_max_total_size_mb,
             checkpoint_max_file_size_mb=checkpoint_max_file_size_mb,
             pass_session_id=pass_session_id,
+            enable_multi_model_routing=enable_multi_model_routing,
+            multi_model_cost_optimization=multi_model_cost_optimization,
+            multi_model_quality_priority=multi_model_quality_priority,
         )
 
     def _get_session_db_for_recall(self):
@@ -562,6 +569,207 @@ class AIAgent:
         # Context engine reset (works for both built-in compressor and plugins)
         if hasattr(self, "context_compressor") and self.context_compressor:
             self.context_compressor.on_session_reset()
+
+    def select_model_for_task(
+        self,
+        task: str,
+        context: Optional[Dict[str, Any]] = None,
+        available_models: Optional[List[str]] = None,
+        excluded_models: Optional[Set[str]] = None,
+    ) -> str:
+        """
+        Select the best model for a given task using multi-model orchestration.
+        
+        If multi-model routing is disabled, returns the current model.
+        
+        Args:
+            task: The task description or user message
+            context: Additional context (tools, images, etc.)
+            available_models: List of available model names
+            excluded_models: Models to exclude from selection
+        
+        Returns:
+            Selected model name
+        """
+        if not self.enable_multi_model_routing or not self._model_orchestrator:
+            # Return current model if routing is disabled
+            return self.model
+        
+        try:
+            model_name, capabilities = self._model_orchestrator.select_model(
+                task=task,
+                context=context,
+                available_models=available_models,
+                excluded_models=excluded_models,
+            )
+            
+            if model_name and model_name != self.model:
+                logger.info(f"Multi-model routing: switched from {self.model} to {model_name}")
+                # Update the agent's model
+                self.model = model_name
+            
+            return model_name or self.model
+        except Exception as exc:
+            logger.warning(f"Multi-model routing failed, using current model: {exc}")
+            return self.model
+    
+    def get_model_fallback_chain(
+        self,
+        model_name: Optional[str] = None,
+        excluded_models: Optional[Set[str]] = None,
+    ) -> List[str]:
+        """
+        Get the fallback chain for a model.
+        
+        Args:
+            model_name: The model to get fallbacks for (default: current model)
+            excluded_models: Models to exclude from fallback
+        
+        Returns:
+            List of model names in fallback order
+        """
+        if not self.enable_multi_model_routing or not self._model_orchestrator:
+            return []
+        
+        target_model = model_name or self.model
+        return self._model_orchestrator.get_fallback_chain(target_model, excluded_models)
+    
+    def record_model_performance(
+        self,
+        model_name: str,
+        success: bool,
+        latency_ms: Optional[int] = None,
+        error: Optional[str] = None,
+    ):
+        """
+        Record model performance for optimization.
+        
+        Args:
+            model_name: The model that was used
+            success: Whether the request was successful
+            latency_ms: Request latency in milliseconds
+            error: Error message if failed
+        """
+        if self.enable_multi_model_routing and self._model_orchestrator:
+            self._model_orchestrator.record_performance(
+                model_name=model_name,
+                success=success,
+                latency_ms=latency_ms,
+                error=error,
+            )
+    
+    def create_workflow(
+        self,
+        name: str,
+        description: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Create a new workflow for complex multi-step tasks.
+        
+        Args:
+            name: Workflow name
+            description: Workflow description
+            metadata: Optional metadata
+        
+        Returns:
+            Workflow ID
+        """
+        if not self._workflow_orchestrator:
+            from agent.workflow_orchestrator import WorkflowOrchestrator
+            self._workflow_orchestrator = WorkflowOrchestrator()
+            self.enable_workflow_orchestration = True
+        
+        workflow = self._workflow_orchestrator.create_workflow(name, description, metadata)
+        return workflow.workflow_id
+    
+    def add_workflow_task(
+        self,
+        workflow_id: str,
+        name: str,
+        description: str,
+        func: Callable,
+        args: tuple = (),
+        kwargs: dict = None,
+        dependencies: Set[str] = None,
+        max_retries: int = 3,
+        timeout: Optional[float] = None,
+    ) -> str:
+        """
+        Add a task to a workflow.
+        
+        Args:
+            workflow_id: Workflow ID
+            name: Task name
+            description: Task description
+            func: Function to execute
+            args: Positional arguments
+            kwargs: Keyword arguments
+            dependencies: Set of task IDs this task depends on
+            max_retries: Maximum retry attempts
+            timeout: Timeout in seconds
+        
+        Returns:
+            Task ID
+        """
+        if not self._workflow_orchestrator:
+            raise ValueError("Workflow orchestrator not initialized")
+        
+        return self._workflow_orchestrator.add_task_to_workflow(
+            workflow_id=workflow_id,
+            name=name,
+            description=description,
+            func=func,
+            args=args,
+            kwargs=kwargs or {},
+            dependencies=dependencies or set(),
+            max_retries=max_retries,
+            timeout=timeout,
+        )
+    
+    def execute_workflow(self, workflow_id: str) -> Dict[str, Any]:
+        """
+        Execute a workflow with dependency management.
+        
+        Args:
+            workflow_id: Workflow ID to execute
+        
+        Returns:
+            Workflow execution results
+        """
+        if not self._workflow_orchestrator:
+            raise ValueError("Workflow orchestrator not initialized")
+        
+        return self._workflow_orchestrator.execute_workflow(workflow_id)
+    
+    def decompose_and_execute(
+        self,
+        task_description: str,
+        task_functions: Dict[str, Callable],
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Decompose a complex task and execute it as a workflow.
+        
+        Args:
+            task_description: The task to decompose and execute
+            task_functions: Mapping of task names to functions
+            context: Additional context
+        
+        Returns:
+            Workflow execution results
+        """
+        if not self._workflow_orchestrator:
+            from agent.workflow_orchestrator import WorkflowOrchestrator
+            self._workflow_orchestrator = WorkflowOrchestrator()
+            self.enable_workflow_orchestration = True
+        
+        workflow_id = self._workflow_orchestrator.create_workflow_from_description(
+            task_description,
+            task_functions,
+            context,
+        )
+        return self.execute_workflow(workflow_id)
 
     def _ensure_lmstudio_runtime_loaded(self, config_context_length: Optional[int] = None) -> None:
         """

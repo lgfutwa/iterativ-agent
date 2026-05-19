@@ -2,6 +2,7 @@ import type { Translations } from "@/i18n/types";
 
 const BUILTIN: Record<string, keyof Translations["app"]["nav"]> = {
   "/chat": "chat",
+  "/computer": "chat",
   "/sessions": "sessions",
   "/analytics": "analytics",
   "/models": "models",
@@ -22,8 +23,9 @@ export function resolvePageTitle(
 ): string {
   const normalized = pathname.replace(/\/$/, "") || "/";
   if (normalized === "/") {
-    return t.app.nav.sessions;
+    return "Computer";
   }
+  if (normalized === "/computer") return "Computer";
   const plugin = pluginTabs.find((p) => p.path === normalized);
   if (plugin) {
     return plugin.label;

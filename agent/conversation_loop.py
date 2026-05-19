@@ -656,6 +656,38 @@ def run_conversation(
                 and "skill_manage" in agent.valid_tool_names):
             agent._iters_since_skill += 1
         
+        # ── Multi-model routing (Perplexity-style) ───────────────────────
+        # If enabled, automatically select the best model for this task
+        if agent.enable_multi_model_routing and api_call_count == 1:
+            # Only route on first API call of the turn to avoid model switching mid-conversation
+            try:
+                # Build context for task classification
+                task_context = {
+                    "has_images": any(
+                        isinstance(msg.get("content"), list)
+                        for msg in messages
+                        if isinstance(msg.get("content"), list)
+                    ),
+                    "has_browser_tools": any(
+                        tool in agent.valid_tool_names
+                        for tool in ["browser_use", "browser_search", "browserbase"]
+                    ),
+                }
+                
+                # Select the best model for this task
+                selected_model = agent.select_model_for_task(
+                    task=user_message,
+                    context=task_context,
+                )
+                
+                if selected_model != agent.model:
+                    logger.info(
+                        f"Multi-model routing: {agent.model} -> {selected_model} "
+                        f"(task_type: auto-detected)"
+                    )
+            except Exception as routing_exc:
+                logger.warning(f"Multi-model routing failed: {routing_exc}")
+        
         # ── Pre-API-call /steer drain ──────────────────────────────────
         # If a /steer arrived during the previous API call (while the model
         # was thinking), drain it now — before we build api_messages — so
@@ -1668,6 +1700,20 @@ def run_conversation(
                     except Exception:
                         pass
                 agent._touch_activity(f"API call #{api_call_count} completed")
+                
+                # ── Multi-model routing performance tracking ────────────────
+                # Record performance for the model that was used
+                if agent.enable_multi_model_routing:
+                    try:
+                        api_elapsed_ms = int((time.time() - api_start_time) * 1000)
+                        agent.record_model_performance(
+                            model_name=agent.model,
+                            success=True,
+                            latency_ms=api_elapsed_ms,
+                        )
+                    except Exception as perf_exc:
+                        logger.debug(f"Performance tracking failed: {perf_exc}")
+                
                 break  # Success, exit retry loop
 
             except InterruptedError:

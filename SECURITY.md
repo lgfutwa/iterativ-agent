@@ -1,6 +1,6 @@
-# Hermes Agent Security Policy
+# Iterativ Agent Security Policy
 
-This document describes Hermes Agent's trust model, names the one
+This document describes Iterativ Agent's trust model, names the one
 security boundary the project treats as load-bearing, and defines the
 scope for vulnerability reports.
 

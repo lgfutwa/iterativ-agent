@@ -137,6 +137,10 @@ def init_agent(
     checkpoint_max_total_size_mb: int = 500,
     checkpoint_max_file_size_mb: int = 10,
     pass_session_id: bool = False,
+    # Multi-model orchestration
+    enable_multi_model_routing: bool = False,
+    multi_model_cost_optimization: bool = True,
+    multi_model_quality_priority: bool = False,
 ):
     """
     Initialize the AI Agent.
@@ -218,6 +222,25 @@ def init_agent(
     agent._credential_pool = credential_pool
     agent.log_prefix_chars = log_prefix_chars
     agent.log_prefix = f"{log_prefix} " if log_prefix else ""
+    
+    # Multi-model orchestration
+    agent.enable_multi_model_routing = enable_multi_model_routing
+    agent.multi_model_cost_optimization = multi_model_cost_optimization
+    agent.multi_model_quality_priority = multi_model_quality_priority
+    agent._model_orchestrator = None
+    
+    # Workflow orchestration
+    agent.enable_workflow_orchestration = False
+    agent._workflow_orchestrator = None
+    
+    if enable_multi_model_routing:
+        from agent.model_orchestrator import ModelOrchestrator
+        agent._model_orchestrator = ModelOrchestrator(
+            cost_optimization=multi_model_cost_optimization,
+            quality_priority=multi_model_quality_priority,
+        )
+        if not agent.quiet_mode:
+            print(f"🧠 Multi-model routing enabled (cost_optimization={multi_model_cost_optimization}, quality_priority={multi_model_quality_priority})")
     # Store effective base URL for feature detection (prompt caching, reasoning, etc.)
     agent.base_url = base_url or ""
     provider_name = provider.strip().lower() if isinstance(provider, str) and provider.strip() else None

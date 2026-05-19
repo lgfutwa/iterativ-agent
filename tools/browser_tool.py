@@ -2282,6 +2282,273 @@ def _truncate_snapshot(snapshot_text: str, max_chars: int = 8000) -> str:
 
 
 # ============================================================================
+# Multi-Tab Orchestration (Perplexity-style)
+# ============================================================================
+
+from tools.browser_tab_orchestrator import (
+    get_orchestrator,
+    cleanup_orchestrator,
+    TabOrchestrator,
+    TabStatus,
+)
+
+
+def browser_tab_create(
+    url: str,
+    task_id: Optional[str] = None,
+) -> str:
+    """
+    Create a new browser tab for parallel operations.
+    
+    Args:
+        url: Initial URL for the new tab
+        task_id: Task identifier for session management
+    
+    Returns:
+        JSON string with tab_id and status
+    """
+    try:
+        orchestrator = get_orchestrator(task_id or "default")
+        tab_id = orchestrator.create_tab(url, task_id)
+        
+        # Navigate to the URL in the new tab
+        nav_result = browser_navigate(url, task_id=task_id)
+        
+        orchestrator.update_tab_status(tab_id, TabStatus.READY)
+        
+        return json.dumps({
+            "success": True,
+            "tab_id": tab_id,
+            "url": url,
+            "navigation_result": nav_result,
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }, ensure_ascii=False)
+
+
+def browser_tab_switch(
+    tab_id: str,
+    task_id: Optional[str] = None,
+) -> str:
+    """
+    Switch to a different browser tab.
+    
+    Args:
+        tab_id: ID of the tab to switch to
+        task_id: Task identifier
+    
+    Returns:
+        JSON string with status
+    """
+    try:
+        orchestrator = get_orchestrator(task_id or "default")
+        success = orchestrator.switch_tab(tab_id)
+        
+        if success:
+            tab_info = orchestrator.get_tab(tab_id)
+            return json.dumps({
+                "success": True,
+                "tab_id": tab_id,
+                "url": tab_info.url if tab_info else None,
+                "status": tab_info.status.value if tab_info else None,
+            }, ensure_ascii=False)
+        else:
+            return json.dumps({
+                "success": False,
+                "error": f"Tab {tab_id} not found or not active"
+            }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }, ensure_ascii=False)
+
+
+def browser_tab_close(
+    tab_id: str,
+    task_id: Optional[str] = None,
+) -> str:
+    """
+    Close a browser tab.
+    
+    Args:
+        tab_id: ID of the tab to close
+        task_id: Task identifier
+    
+    Returns:
+        JSON string with status
+    """
+    try:
+        orchestrator = get_orchestrator(task_id or "default")
+        success = orchestrator.close_tab(tab_id)
+        
+        return json.dumps({
+            "success": success,
+            "tab_id": tab_id,
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }, ensure_ascii=False)
+
+
+def browser_tab_list(
+    active_only: bool = False,
+    task_id: Optional[str] = None,
+) -> str:
+    """
+    List all browser tabs.
+    
+    Args:
+        active_only: If True, only return active tabs
+        task_id: Task identifier
+    
+    Returns:
+        JSON string with list of tabs
+    """
+    try:
+        orchestrator = get_orchestrator(task_id or "default")
+        tabs = orchestrator.list_tabs(active_only=active_only)
+        
+        tabs_data = [{
+            "tab_id": t.tab_id,
+            "url": t.url,
+            "title": t.title,
+            "status": t.status.value,
+            "created_at": t.created_at,
+            "last_active": t.last_active,
+            "age_seconds": t.age_seconds(),
+        } for t in tabs]
+        
+        return json.dumps({
+            "success": True,
+            "tabs": tabs_data,
+            "count": len(tabs_data),
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }, ensure_ascii=False)
+
+
+def browser_tab_execute(
+    tab_id: str,
+    action: str,
+    task_id: Optional[str] = None,
+    **action_kwargs,
+) -> str:
+    """
+    Execute an action on a specific tab in parallel.
+    
+    Args:
+        tab_id: ID of the tab to execute on
+        action: Action to execute (e.g., "navigate", "snapshot", "click")
+        task_id: Task identifier
+        **action_kwargs: Arguments for the action
+    
+    Returns:
+        JSON string with execution result
+    """
+    try:
+        orchestrator = get_orchestrator(task_id or "default")
+        
+        # Map action names to functions
+        action_map = {
+            "navigate": browser_navigate,
+            "snapshot": browser_snapshot,
+            "click": browser_click,
+            "type": browser_type,
+            "scroll": browser_scroll,
+        }
+        
+        if action not in action_map:
+            return json.dumps({
+                "success": False,
+                "error": f"Unknown action: {action}"
+            }, ensure_ascii=False)
+        
+        # Execute on the specific tab
+        def execute_action():
+            # Switch to the tab first
+            if not orchestrator.switch_tab(tab_id):
+                raise ValueError(f"Cannot switch to tab {tab_id}")
+            
+            # Execute the action
+            func = action_map[action]
+            return func(task_id=task_id, **action_kwargs)
+        
+        future = orchestrator.execute_on_tab(tab_id, execute_action)
+        result = future.result(timeout=30)
+        
+        return json.dumps({
+            "success": True,
+            "tab_id": tab_id,
+            "action": action,
+            "result": result,
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }, ensure_ascii=False)
+
+
+def browser_tab_parallel(
+    operations: list,
+    task_id: Optional[str] = None,
+) -> str:
+    """
+    Execute operations on multiple tabs in parallel.
+    
+    Args:
+        operations: List of dicts with "tab_id", "action", and "args"
+        task_id: Task identifier
+    
+    Returns:
+        JSON string with results from all tabs
+    """
+    try:
+        orchestrator = get_orchestrator(task_id or "default")
+        
+        # Build operation tuples
+        op_tuples = []
+        for op in operations:
+            tab_id = op.get("tab_id")
+            action = op.get("action")
+            args = op.get("args", {})
+            
+            if not tab_id or not action:
+                continue
+            
+            # Create a closure for this operation
+            def make_op(tid, act, kwargs):
+                def op_func():
+                    return browser_tab_execute(tid, act, task_id, **kwargs)
+                return op_func
+            
+            op_tuples.append((tab_id, make_op(tab_id, action, args), (), {}))
+        
+        # Execute in parallel
+        results = orchestrator.coordinate_tabs(op_tuples)
+        
+        return json.dumps({
+            "success": True,
+            "results": results,
+            "count": len(results),
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }, ensure_ascii=False)
+
+
+# ============================================================================
 # Browser Tool Functions
 # ============================================================================
 

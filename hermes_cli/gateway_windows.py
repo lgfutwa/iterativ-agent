@@ -46,8 +46,8 @@ _FALLBACK_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
-_TASK_NAME_DEFAULT = "Hermes_Gateway"
-_TASK_DESCRIPTION = "Hermes Agent Gateway - Messaging Platform Integration"
+_TASK_NAME_DEFAULT = "Iterativ_Gateway"
+_TASK_DESCRIPTION = "Iterativ Agent Gateway - Messaging Platform Integration"
 
 
 # ---------------------------------------------------------------------------
