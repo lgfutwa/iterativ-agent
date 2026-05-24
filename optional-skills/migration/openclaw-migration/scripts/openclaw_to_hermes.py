@@ -73,11 +73,11 @@ MIGRATION_OPTION_METADATA: Dict[str, Dict[str, str]] = {
     },
     "skills": {
         "label": "User skills",
-        "description": "Copy OpenClaw skills into ~/.hermes/skills/openclaw-imports/.",
+        "description": "Copy OpenClaw skills into ~/.iterativ/skills/openclaw-imports/.",
     },
     "tts-assets": {
         "label": "TTS assets",
-        "description": "Copy compatible workspace TTS assets into ~/.hermes/tts/.",
+        "description": "Copy compatible workspace TTS assets into ~/.iterativ/tts/.",
     },
     "discord-settings": {
         "label": "Discord settings",
@@ -129,7 +129,7 @@ MIGRATION_OPTION_METADATA: Dict[str, Dict[str, str]] = {
     },
     "cron-jobs": {
         "label": "Cron / scheduled tasks",
-        "description": "Import cron job definitions. Archive for manual recreation via 'hermes cron'.",
+        "description": "Import cron job definitions. Archive for manual recreation via 'iterativ cron'.",
     },
     "hooks-config": {
         "label": "Hooks and webhooks",
@@ -416,7 +416,7 @@ def _case_preserving_replacement(replacement: str):
 
     Keeps ``OpenClaw`` → ``Hermes`` but maps ``openclaw`` → ``hermes`` so a
     filesystem path like ``~/.openclaw/config.yaml`` rewrites to
-    ``~/.hermes/config.yaml`` (the real Hermes home) instead of the broken
+    ``~/.iterativ/config.yaml`` (the real Hermes home) instead of the broken
     ``~/.Hermes/config.yaml``.
     """
     def _sub(match: "re.Match[str]") -> str:
@@ -2228,7 +2228,7 @@ class Migrator:
                 dest = self.archive_dir / "cron-config.json"
                 dest.write_text(json.dumps(cron, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
                 self.record("cron-jobs", "openclaw.json cron.*", str(dest), "archived",
-                            "Cron config archived. Use 'hermes cron' to recreate jobs manually.")
+                            "Cron config archived. Use 'iterativ cron' to recreate jobs manually.")
             else:
                 self.record("cron-jobs", "openclaw.json cron.*", "archive/cron-config.json",
                             "archived", "Would archive cron config")
@@ -2408,7 +2408,7 @@ class Migrator:
             dest = self.archive_dir / "gateway-config.json"
             dest.write_text(json.dumps(gateway, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         self.record("gateway-config", "openclaw.json gateway.*", "archive/gateway-config.json",
-                    "archived", "Gateway config archived. Use 'hermes gateway' to configure.")
+                    "archived", "Gateway config archived. Use 'iterativ gateway' to configure.")
 
         # Extract gateway auth token to .env if present
         auth = gateway.get("auth") or {}
@@ -2908,14 +2908,14 @@ class Migrator:
             "",
             "After migration, you may want to:",
             "- Run `hermes claw cleanup` to archive the OpenClaw directory (prevents state confusion)",
-            "- Run `hermes setup` to configure any remaining settings",
+            "- Run `iterativ setup` to configure any remaining settings",
             "- Run `hermes mcp list` to verify MCP servers were imported correctly",
         ])
 
         if has_cron_config_archive:
-            notes.append("- Run `hermes cron` to recreate scheduled tasks (see archive/cron-config.json)")
+            notes.append("- Run `iterativ cron` to recreate scheduled tasks (see archive/cron-config.json)")
         elif has_cron_store_archive:
-            notes.append("- Run `hermes cron` to recreate scheduled tasks (see archived cron-store)")
+            notes.append("- Run `iterativ cron` to recreate scheduled tasks (see archived cron-store)")
 
         # Check if skills were imported
         has_skills = any(i.kind == "skills" and i.status == "migrated" for i in self.items)
@@ -2945,8 +2945,8 @@ class Migrator:
             ])
 
         notes.extend([
-            "- Run `hermes gateway install` if you need the gateway service",
-            "- Review `~/.hermes/config.yaml` for any adjustments",
+            "- Run `iterativ gateway install` if you need the gateway service",
+            "- Review `~/.iterativ/config.yaml` for any adjustments",
             "",
         ])
 
@@ -3067,7 +3067,7 @@ def main() -> int:
             seen_kinds.add(label)
             dest = item.get("destination") or ""
             if dest.startswith(str(report["target_root"])):
-                dest = "~/.hermes/" + dest[len(str(report["target_root"])) + 1:]
+                dest = "~/.iterativ/" + dest[len(str(report["target_root"])) + 1:]
             meta = MIGRATION_OPTION_METADATA.get(label, {})
             display = meta.get("label", label)
             print(f"    ✔ {display:<35s} -> {dest}")
@@ -3113,10 +3113,10 @@ def main() -> int:
     if args.execute:
         print()
         print("  Next steps:")
-        print("    1. Review ~/.hermes/config.yaml")
+        print("    1. Review ~/.iterativ/config.yaml")
         print("    2. Run: hermes mcp list")
         if any(i["kind"] == "cron-jobs" and i["status"] == "archived" for i in items):
-            print("    3. Recreate cron jobs: hermes cron")
+            print("    3. Recreate cron jobs: iterativ cron")
         if report.get("output_dir"):
             print(f"    → Full report: {report['output_dir']}/MIGRATION_NOTES.md")
     elif not args.execute:

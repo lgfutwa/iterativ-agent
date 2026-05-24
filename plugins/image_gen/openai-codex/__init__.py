@@ -88,7 +88,7 @@ _CODEX_INSTRUCTIONS = (
 def _load_image_gen_config() -> Dict[str, Any]:
     """Read ``image_gen`` from config.yaml (returns {} on any failure)."""
     try:
-        from hermes_cli.config import load_config
+        from iterativ_cli.config import load_config
 
         cfg = load_config()
         section = cfg.get("image_gen") if isinstance(cfg, dict) else None
@@ -261,7 +261,7 @@ class OpenAICodexImageGenProvider(ImageGenProvider):
             "tag": "gpt-image-2 via ChatGPT/Codex OAuth — no API key required",
             "env_vars": [],
             "post_setup_hint": (
-                "Sign in with `hermes auth codex` (or `hermes setup` → Codex) "
+                "Sign in with `iterativ auth codex` (or `iterativ setup` → Codex) "
                 "if you haven't already. No API key needed."
             ),
         }
@@ -287,7 +287,7 @@ class OpenAICodexImageGenProvider(ImageGenProvider):
             return error_response(
                 error=(
                     "No Codex/ChatGPT OAuth credentials available. Run "
-                    "`hermes auth codex` (or `hermes setup` → Codex) to sign in."
+                    "`iterativ auth codex` (or `iterativ setup` → Codex) to sign in."
                 ),
                 error_type="auth_required",
                 provider="openai-codex",

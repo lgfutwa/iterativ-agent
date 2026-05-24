@@ -164,7 +164,7 @@ If you're trying to switch to a provider you haven't set up yet (e.g. you only h
 
 ### Nous Portal
 
-Subscription-based access to Hermes-4 models (`Hermes-4-70B`, `Hermes-4.3-36B`, `Hermes-4-405B`) via Nous Research's portal. Run `hermes model`, pick **Nous Portal**, sign in through the browser — Hermes stores a long-lived refresh token at `~/.hermes/auth.json`.
+Subscription-based access to Hermes-4 models (`Hermes-4-70B`, `Hermes-4.3-36B`, `Hermes-4-405B`) via Iterativ Knowledge's portal. Run `hermes model`, pick **Nous Portal**, sign in through the browser — Hermes stores a long-lived refresh token at `~/.hermes/auth.json`.
 
 The refresh token is also shared across profiles via a shared token store, so logging in on one profile carries over to the others.
 

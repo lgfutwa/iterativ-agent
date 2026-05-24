@@ -27,6 +27,7 @@ import {
   Download,
   Eye,
   FileText,
+  FolderOpen,
   Globe,
   GitBranch,
   Heart,
@@ -35,8 +36,10 @@ import {
   MessageSquare,
   MonitorCog,
   Package,
+  Plus,
   Puzzle,
   RotateCw,
+  Search,
   Settings,
   Shield,
   Sparkles,
@@ -379,10 +382,15 @@ function buildRoutes(
 export default function App() {
   const { t } = useI18n();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { manifests, loading: pluginsLoading } = usePlugins();
   const { theme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const startNewThread = useCallback(() => {
+    navigate(`/chat?thread=${Date.now().toString(36)}`);
+    closeMobile();
+  }, [closeMobile, navigate]);
   const isDocsRoute = pathname === "/docs" || pathname === "/docs/";
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const isChatRoute = normalizedPath === "/chat";
@@ -487,7 +495,7 @@ export default function App() {
   return (
     <div
       data-layout-variant={layoutVariant}
-      className="computer-ui-shell flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[var(--studio-surface)] font-sans text-[var(--studio-text)] antialiased"
+      className="computer-ui-shell flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[var(--studio-app-bg)] font-sans text-[var(--studio-text)] antialiased"
     >
       <SelectionSwitcher />
       <PluginSlot name="backdrop" />
@@ -544,52 +552,131 @@ export default function App() {
             id="app-sidebar"
             aria-label={t.app.navigation}
             className={cn(
-              "computer-sidebar fixed top-0 left-0 z-50 flex h-dvh max-h-dvh w-64 min-h-0 flex-col",
-              "border-r border-[var(--studio-border-subtle)]",
-              "bg-[var(--studio-surface-subtle)]/95 backdrop-blur-sm",
+              "computer-sidebar fixed top-0 left-0 z-50 flex h-dvh max-h-dvh w-[19rem] min-h-0 flex-col",
+              "border border-[var(--studio-border-subtle)]",
+              "bg-[var(--studio-sidebar-bg)] backdrop-blur-xl",
               "transition-transform duration-200 ease-out",
               mobileOpen ? "translate-x-0" : "-translate-x-full",
-              "lg:sticky lg:top-0 lg:translate-x-0 lg:shrink-0",
+              "lg:sticky lg:top-0 lg:m-2 lg:h-[calc(100dvh-1rem)] lg:max-h-[calc(100dvh-1rem)] lg:translate-x-0 lg:shrink-0 lg:rounded-[24px]",
             )}
             style={{
-              background: "var(--component-sidebar-background)",
+              background:
+                "var(--component-sidebar-background, var(--studio-sidebar-bg))",
               clipPath: "var(--component-sidebar-clip-path)",
               borderImage: "var(--component-sidebar-border-image)",
             }}
           >
             <div
               className={cn(
-                "flex h-14 shrink-0 items-center justify-between gap-2 px-4",
-                "border-b border-[var(--studio-border-subtle)]",
+                "shrink-0 px-4 pb-4 pt-4",
               )}
             >
-              <div className="flex items-center gap-2">
-                <PluginSlot name="header-left" />
+              <div className="mb-7 flex items-center justify-between gap-3">
+                <div aria-hidden className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+                  <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+                  <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+                </div>
 
-                <Typography
-                  className="font-sans text-[1.05rem] font-semibold leading-[1.05] tracking-normal text-[var(--studio-text)]"
+                <Button
+                  ghost
+                  size="icon"
+                  onClick={closeMobile}
+                  aria-label={t.app.closeNavigation}
+                  className="lg:hidden text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]"
                 >
-                  Iterativ
-                  <br />
-                  Studio
-                </Typography>
+                  <X />
+                </Button>
               </div>
 
-              <Button
-                ghost
-                size="icon"
-                onClick={closeMobile}
-                aria-label={t.app.closeNavigation}
-                className="lg:hidden text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]"
+              <div
+                className="mb-5 grid grid-cols-2 rounded-[22px] bg-[var(--studio-sidebar-segment)] p-1"
+                aria-label={t.app.navigation}
               >
-                <X />
-              </Button>
+                <NavLink
+                  to="/chat"
+                  onClick={closeMobile}
+                  title="Workspace"
+                  aria-label="Workspace"
+                  className={({ isActive }) =>
+                    cn(
+                      "flex h-10 items-center justify-center rounded-[18px] transition-colors",
+                      "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--studio-focus)]",
+                      isActive
+                        ? "bg-[var(--studio-sidebar-segment-active)] text-[var(--studio-text)] shadow-sm"
+                        : "text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]",
+                    )
+                  }
+                >
+                  <Terminal className="h-4 w-4" />
+                </NavLink>
+                <NavLink
+                  to="/computer"
+                  onClick={closeMobile}
+                  title="Computer"
+                  aria-label="Computer"
+                  className={({ isActive }) =>
+                    cn(
+                      "flex h-10 items-center justify-center rounded-[18px] transition-colors",
+                      "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--studio-focus)]",
+                      isActive
+                        ? "bg-[var(--studio-sidebar-segment-active)] text-[var(--studio-text)] shadow-sm"
+                        : "text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]",
+                    )
+                  }
+                >
+                  <MonitorCog className="h-4 w-4" />
+                </NavLink>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <PluginSlot name="header-left" />
+                <Typography className="font-sans text-[0.95rem] font-semibold leading-[1.1] tracking-normal text-[var(--studio-text)]">
+                  Iterativ Studio
+                </Typography>
+              </div>
             </div>
 
             <nav
-              className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden border-t border-[var(--studio-border-subtle)] py-2"
+              className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2"
               aria-label={t.app.navigation}
             >
+              <div className="mb-2 flex flex-col gap-1.5 px-1">
+                <button
+                  type="button"
+                  onClick={startNewThread}
+                  className={cn(
+                    "flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-left",
+                    "text-[0.9rem] font-medium tracking-normal text-[var(--studio-text)]",
+                    "transition-colors hover:bg-white/65",
+                    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--studio-focus)]",
+                  )}
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  <span className="truncate">New Thread</span>
+                </button>
+                <NavLink
+                  to="/workflows"
+                  onClick={closeMobile}
+                  className={cn(
+                    "flex items-center gap-3 rounded-[12px] px-3 py-2.5",
+                    "text-[0.9rem] font-medium tracking-normal text-[var(--studio-text)]",
+                    "transition-colors hover:bg-white/65",
+                    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--studio-focus)]",
+                  )}
+                >
+                  <FolderOpen className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Spaces</span>
+                </NavLink>
+                <div
+                  aria-hidden
+                  className="mt-3 flex h-10 items-center gap-2 rounded-[12px] border border-[var(--studio-border-subtle)] bg-white/45 px-3 text-[0.82rem] font-medium text-[var(--studio-text-muted)]"
+                >
+                  <Search className="h-4 w-4 shrink-0 opacity-55" />
+                  <span className="truncate">AgentHire OS</span>
+                </div>
+              </div>
+
               <ul className="flex flex-col">
                 {sidebarNav.coreItems.map((item) => (
                   <SidebarNavLink
@@ -603,8 +690,8 @@ export default function App() {
 
               {sidebarNav.pluginItems.length > 0 && (
                 <div
-                  aria-labelledby="hermes-sidebar-plugin-nav-heading"
-                  className="flex flex-col border-t border-[var(--studio-border-subtle)] pb-2"
+                  aria-labelledby="iterativ-sidebar-plugin-nav-heading"
+                  className="mt-2 flex flex-col border-t border-[var(--studio-border-subtle)] pb-2"
                   role="group"
                 >
                   <span
@@ -612,7 +699,7 @@ export default function App() {
                       "px-5 pt-2.5 pb-1",
                       "text-[0.68rem] font-medium tracking-normal text-[var(--studio-text-soft)]",
                     )}
-                    id="hermes-sidebar-plugin-nav-heading"
+                    id="iterativ-sidebar-plugin-nav-heading"
                   >
                     {t.app.pluginNavSection}
                   </span>
@@ -636,7 +723,7 @@ export default function App() {
             <div
               className={cn(
                 "flex shrink-0 items-center justify-between gap-2",
-                "px-3 py-2",
+                "px-3 py-2.5",
                 "border-t border-[var(--studio-border-subtle)]",
               )}
             >
@@ -740,13 +827,13 @@ function SidebarNavLink({ closeMobile, item, t }: SidebarNavLinkProps) {
         className={({ isActive }) =>
           cn(
             "group relative flex items-center gap-3",
-            "mx-2 rounded-[8px] px-3 py-2.5",
+            "rounded-[12px] px-3 py-2.5",
             "text-[0.9rem] font-medium tracking-normal",
             "whitespace-nowrap transition-colors cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--studio-focus)]",
             isActive
-              ? "bg-[var(--studio-border-subtle)] text-[var(--studio-text)]"
-              : "text-[var(--studio-text-muted)] hover:bg-[var(--studio-surface)] hover:text-[var(--studio-text)]",
+              ? "bg-white/80 text-[var(--studio-text)] shadow-sm"
+              : "text-[var(--studio-text-muted)] hover:bg-white/60 hover:text-[var(--studio-text)]",
           )
         }
         style={{
@@ -782,8 +869,8 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
     {
       action: "update",
       icon: Download,
-      label: t.status.updateHermes,
-      runningLabel: t.status.updatingHermes,
+      label: t.status.updateIterativ,
+      runningLabel: t.status.updatingIterativ,
       spin: false,
     },
   ];
@@ -800,12 +887,12 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
       className={cn(
         "shrink-0 flex flex-col",
         "border-t border-[var(--studio-border-subtle)]",
-        "py-1",
+        "px-2 py-2",
       )}
     >
       <span
         className={cn(
-          "px-5 pt-0.5 pb-0.5",
+          "px-3 pt-0.5 pb-1",
           "text-[0.68rem] font-medium tracking-normal text-[var(--studio-text-soft)]",
         )}
       >
@@ -831,12 +918,12 @@ function SidebarSystemActions({ onNavigate }: { onNavigate: () => void }) {
                 aria-busy={busy}
                 active={busy}
                 className={cn(
-                  "mx-2 gap-3 rounded-[8px] px-3 py-2 whitespace-nowrap",
+                  "gap-3 rounded-[12px] px-3 py-2 whitespace-nowrap",
                   "text-[0.85rem] font-medium tracking-normal",
                   "transition-opacity",
                   busy
-                    ? "bg-[var(--studio-border-subtle)] text-[var(--studio-text)] opacity-100"
-                    : "text-[var(--studio-text-muted)] opacity-100 hover:bg-[var(--studio-surface)] hover:text-[var(--studio-text)]",
+                    ? "bg-white/75 text-[var(--studio-text)] opacity-100 shadow-sm"
+                    : "text-[var(--studio-text-muted)] opacity-100 hover:bg-white/55 hover:text-[var(--studio-text)]",
                   "disabled:opacity-30",
                 )}
               >

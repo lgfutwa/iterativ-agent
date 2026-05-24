@@ -76,6 +76,26 @@
   --theme-radius: 0.5rem;
   --theme-spacing-mul: 1;
   --theme-density: comfortable;
+
+  /* Dashboard shell tokens. Defined at :root as well as the shell so
+     portaled drawers and dialogs inherit the same clean UI palette. */
+  --studio-app-bg: #f8f7f3;
+  --studio-sidebar-bg: linear-gradient(180deg, #eaf8ff 0%, #f5fafc 38%, #fffefa 100%);
+  --studio-sidebar-segment: rgba(219, 228, 236, 0.86);
+  --studio-sidebar-segment-active: rgba(250, 252, 253, 0.86);
+  --studio-surface: #fffefa;
+  --studio-surface-subtle: #f4f8fa;
+  --studio-surface-raised: #fffefa;
+  --studio-border: #dcdedc;
+  --studio-border-subtle: #e8e7e2;
+  --studio-text: #242628;
+  --studio-text-muted: #70777d;
+  --studio-text-soft: #9aa1a7;
+  --studio-focus: #93c5d2;
+  --studio-radius-sm: 8px;
+  --studio-radius-md: 14px;
+  --studio-radius-lg: 24px;
+  --studio-radius-pill: 999px;
 }
 
 /* Theme tokens cascade into the document root so every descendant inherits
@@ -132,18 +152,22 @@ code, kbd, pre, samp, .font-mono, .font-mono-ui {
   --studio-success: #188038;
   --studio-warning: #f9ab00;
   --studio-danger: #d93025;
-  --studio-surface: #ffffff;
-  --studio-surface-subtle: #f8fafc;
-  --studio-surface-raised: #ffffff;
-  --studio-border: #dadce0;
-  --studio-border-subtle: #e8eaed;
-  --studio-text: #111827;
-  --studio-text-muted: #5f6b7a;
-  --studio-text-soft: #8993a3;
-  --studio-focus: #8ab4f8;
+  --studio-app-bg: #f8f7f3;
+  --studio-sidebar-bg: linear-gradient(180deg, #eaf8ff 0%, #f5fafc 38%, #fffefa 100%);
+  --studio-sidebar-segment: rgba(219, 228, 236, 0.86);
+  --studio-sidebar-segment-active: rgba(250, 252, 253, 0.86);
+  --studio-surface: #fffefa;
+  --studio-surface-subtle: #f4f8fa;
+  --studio-surface-raised: #fffefa;
+  --studio-border: #dcdedc;
+  --studio-border-subtle: #e8e7e2;
+  --studio-text: #242628;
+  --studio-text-muted: #70777d;
+  --studio-text-soft: #9aa1a7;
+  --studio-focus: #93c5d2;
   --studio-radius-sm: 8px;
   --studio-radius-md: 14px;
-  --studio-radius-lg: 28px;
+  --studio-radius-lg: 24px;
   --studio-radius-pill: 999px;
   --background-base: var(--studio-surface);
   --background: var(--studio-surface);
@@ -158,8 +182,21 @@ code, kbd, pre, samp, .font-mono, .font-mono-ui {
 }
 
 .computer-sidebar {
-  box-shadow: none;
+  box-shadow: 0 18px 60px rgba(30, 41, 59, 0.08);
   border-right: 1px solid var(--studio-border-subtle);
+}
+
+.chat-clean-shell {
+  background: var(--studio-app-bg);
+}
+
+.iterativ-chat-xterm-host .xterm {
+  height: 100%;
+}
+
+.iterativ-chat-xterm-host .xterm-viewport,
+.iterativ-chat-xterm-host .xterm-screen {
+  background: #fffefa !important;
 }
 
 .computer-hero-panel,

@@ -1,0 +1,48 @@
+{
+  "@context": {
+    "k2": "https://iterativ.ai/knowledge-ii#",
+    "name": "k2:name",
+    "concepts": "k2:concepts",
+    "relationships": "k2:relationships",
+    "trusted_sources": "k2:trustedSources",
+    "linked_skills": "k2:linkedSkills"
+  },
+  "@id": "core.computation",
+  "name": "core.computation",
+  "description": "Software systems, code execution, and state changes.",
+  "concepts": [
+    {
+      "@id": "core.computation.tool_execution",
+      "name": "Tool Execution",
+      "definition": "A bounded operation performed by an agent tool with arguments, result, duration, and provenance."
+    },
+    {
+      "@id": "core.computation.state_store",
+      "name": "State Store",
+      "definition": "A persistence surface that records sessions, messages, graph nodes, or derived knowledge."
+    },
+    {
+      "@id": "core.computation.skill",
+      "name": "Skill",
+      "definition": "A reusable procedural transform that can require and produce knowledge claims."
+    }
+  ],
+  "relationships": [
+    {
+      "source": "core.computation.skill",
+      "predicate": "produced_by",
+      "target": "core.computation.tool_execution"
+    },
+    {
+      "source": "core.computation.tool_execution",
+      "predicate": "derives_from",
+      "target": "core.computation.state_store"
+    }
+  ],
+  "trusted_sources": [
+    "Local repository files",
+    "Session database records",
+    "Tool result metadata"
+  ],
+  "linked_skills": []
+}

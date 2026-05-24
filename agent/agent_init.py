@@ -49,9 +49,9 @@ from agent.tool_guardrails import (
     ToolCallGuardrailController,
     ToolGuardrailDecision,
 )
-from hermes_cli.config import cfg_get
-from hermes_cli.timeouts import get_provider_request_timeout
-from hermes_constants import get_hermes_home
+from iterativ_cli.config import cfg_get
+from iterativ_cli.timeouts import get_provider_request_timeout
+from iterativ_constants import get_iterativ_home
 from model_tools import check_toolset_requirements, get_tool_definitions
 from utils import base_url_host_matches
 
@@ -186,7 +186,7 @@ def init_agent(
         skip_context_files (bool): If True, skip auto-injection of SOUL.md, AGENTS.md, and .cursorrules
             into the system prompt. Use this for batch processing and data generation to avoid
             polluting trajectories with user-specific persona or project instructions.
-        load_soul_identity (bool): If True, still use ~/.hermes/SOUL.md as the primary
+        load_soul_identity (bool): If True, still use ~/.iterativ/SOUL.md as the primary
             identity even when skip_context_files=True. Project context files from the cwd
             remain skipped.
     """
@@ -288,7 +288,7 @@ def init_agent(
         pass  # Non-fatal — transport may not exist for all modes yet
 
     try:
-        from hermes_cli.model_normalize import (
+        from iterativ_cli.model_normalize import (
             _AGGREGATOR_PROVIDERS,
             normalize_model_for_provider,
         )
@@ -435,7 +435,7 @@ def init_agent(
     # sessions with >5-minute pauses between turns (#14971).
     agent._cache_ttl = "5m"
     try:
-        from hermes_cli.config import load_config as _load_pc_cfg
+        from iterativ_cli.config import load_config as _load_pc_cfg
 
         _pc_cfg = _load_pc_cfg().get("prompt_caching", {}) or {}
         _ttl = _pc_cfg.get("cache_ttl", "5m")
@@ -471,10 +471,10 @@ def init_agent(
     agent._or_cache_hits: int = 0
 
     # Centralized logging — agent.log (INFO+) and errors.log (WARNING+)
-    # both live under ~/.hermes/logs/.  Idempotent, so gateway mode
+    # both live under ~/.iterativ/logs/.  Idempotent, so gateway mode
     # (which creates a new AIAgent per message) won't duplicate handlers.
-    from hermes_logging import setup_logging, setup_verbose_logging
-    setup_logging(hermes_home=_ra()._hermes_home)
+    from iterativ_logging import setup_logging, setup_verbose_logging
+    setup_logging(iterativ_home=_ra()._iterativ_home)
 
     if agent.verbose_logging:
         setup_verbose_logging()
@@ -485,11 +485,11 @@ def init_agent(
         # root logger's file handlers (agent.log, errors.log) from
         # ever seeing the records, because Python checks
         # logger.isEnabledFor() before handler propagation. We rely
-        # on the fact that hermes_logging.setup_logging() does not
+        # on the fact that iterativ_logging.setup_logging() does not
         # install a console StreamHandler in quiet mode — so INFO
         # records flow to the file handlers but never reach a
         # console. Any future noise reduction belongs at the
-        # handler level inside hermes_logging.py, not here.
+        # handler level inside iterativ_logging.py, not here.
         pass
     
     # Internal stream callback (set during streaming TTS).
@@ -602,7 +602,7 @@ def init_agent(
         # Guardrail config — read from config.yaml at init time.
         agent._bedrock_guardrail_config = None
         try:
-            from hermes_cli.config import load_config as _load_br_cfg
+            from iterativ_cli.config import load_config as _load_br_cfg
             _gr = _load_br_cfg().get("bedrock", {}).get("guardrail", {})
             if _gr.get("guardrail_identifier") and _gr.get("guardrail_version"):
                 agent._bedrock_guardrail_config = {
@@ -655,7 +655,7 @@ def init_agent(
             elif base_url_host_matches(effective_base, "api.routermint.com"):
                 client_kwargs["default_headers"] = _ra()._routermint_headers()
             elif base_url_host_matches(effective_base, "api.githubcopilot.com"):
-                from hermes_cli.models import copilot_default_headers
+                from iterativ_cli.models import copilot_default_headers
 
                 client_kwargs["default_headers"] = copilot_default_headers()
             elif base_url_host_matches(effective_base, "api.kimi.com"):
@@ -710,7 +710,7 @@ def init_agent(
                     # (e.g. alibaba → DASHSCOPE_API_KEY, not ALIBABA_API_KEY).
                     _env_hint = f"{_explicit.upper()}_API_KEY"
                     try:
-                        from hermes_cli.auth import PROVIDER_REGISTRY
+                        from iterativ_cli.auth import PROVIDER_REGISTRY
                         _pcfg = PROVIDER_REGISTRY.get(_explicit)
                         if _pcfg and _pcfg.api_key_env_vars:
                             _env_hint = _pcfg.api_key_env_vars[0]
@@ -758,13 +758,13 @@ def init_agent(
                         raise RuntimeError(
                             f"Provider '{_explicit}' is set in config.yaml but no API key "
                             f"was found. Set the {_env_hint} environment "
-                            f"variable, or switch to a different provider with `hermes model`."
+                            f"variable, or switch to a different provider with `iterativ model`."
                         )
                 if not getattr(agent, "_fallback_activated", False):
                     # No provider configured — reject with a clear message.
                     raise RuntimeError(
-                        "No LLM provider configured. Run `hermes model` to "
-                        "select a provider, or run `hermes setup` for first-time "
+                        "No LLM provider configured. Run `iterativ model` to "
+                        "select a provider, or run `iterativ setup` for first-time "
                         "configuration."
                     )
         
@@ -861,7 +861,7 @@ def init_agent(
 
     # Kanban worker/orchestrator lifecycle guidance is session-static:
     # the dispatcher decides at spawn time whether this process is a kanban
-    # worker (kanban_show tool is present iff HERMES_KANBAN_TASK is set).
+    # worker (kanban_show tool is present iff ITERATIV_KANBAN_TASK is set).
     # Resolving the ~835-token block once here avoids re-running the
     # membership test + reference on every system-prompt rebuild
     # (init + each context compression).
@@ -913,16 +913,16 @@ def init_agent(
     # session_context.py for concurrency safety (gateway runs multiple
     # sessions in one process).  Also writes os.environ as fallback for
     # CLI mode where ContextVars aren't used.
-    os.environ["HERMES_SESSION_ID"] = agent.session_id
+    os.environ["ITERATIV_SESSION_ID"] = agent.session_id
     try:
         from gateway.session_context import _SESSION_ID
         _SESSION_ID.set(agent.session_id)
     except Exception:
         pass  # CLI/test mode — ContextVar not needed
 
-    # Session logs go into ~/.hermes/sessions/ alongside gateway sessions
-    hermes_home = get_hermes_home()
-    agent.logs_dir = hermes_home / "sessions"
+    # Session logs go into ~/.iterativ/sessions/ alongside gateway sessions
+    iterativ_home = get_iterativ_home()
+    agent.logs_dir = iterativ_home / "sessions"
     agent.logs_dir.mkdir(parents=True, exist_ok=True)
     agent.session_log_file = agent.logs_dir / f"session_{agent.session_id}.json"
     
@@ -960,7 +960,7 @@ def init_agent(
     
     # Load config once for memory, skills, and compression sections
     try:
-        from hermes_cli.config import load_config as _load_agent_config
+        from iterativ_cli.config import load_config as _load_agent_config
         _agent_cfg = _load_agent_config()
     except Exception:
         _agent_cfg = {}
@@ -976,6 +976,26 @@ def init_agent(
     # needed later by the startup feasibility check.  Avoid exposing a
     # broad pseudo-public config object on the agent instance.
     agent._aux_compression_context_length_config = None
+
+    # Knowledge II graph substrate. This is additive and fail-open: if graph
+    # setup fails, the classic memory/tool flow continues unchanged.
+    agent._knowledge_graph = None
+    _knowledge_cfg = {}
+    try:
+        _knowledge_cfg = _agent_cfg.get("knowledge", {}) or {}
+        if _knowledge_cfg.get("enabled", True):
+            if (
+                session_db is not None
+                and not _knowledge_cfg.get("db_path")
+                and hasattr(session_db, "get_knowledge_graph")
+            ):
+                agent._knowledge_graph = session_db.get_knowledge_graph()
+            else:
+                from knowledge.hooks import get_knowledge_graph_from_config
+
+                agent._knowledge_graph = get_knowledge_graph_from_config(_knowledge_cfg)
+    except Exception:
+        agent._knowledge_graph = None
 
     # Persistent memory (MEMORY.md + USER.md) -- loaded from disk
     agent._memory_store = None
@@ -995,6 +1015,11 @@ def init_agent(
                 agent._memory_store = MemoryStore(
                     memory_char_limit=mem_config.get("memory_char_limit", 2200),
                     user_char_limit=mem_config.get("user_char_limit", 1375),
+                    knowledge_graph=(
+                        agent._knowledge_graph
+                        if _knowledge_cfg.get("capture_memory_writes", True)
+                        else None
+                    ),
                 )
                 agent._memory_store.load_from_disk()
         except Exception:
@@ -1020,7 +1045,7 @@ def init_agent(
                     _init_kwargs = {
                         "session_id": agent.session_id,
                         "platform": platform or "cli",
-                        "hermes_home": str(get_hermes_home()),
+                        "iterativ_home": str(get_iterativ_home()),
                         "agent_context": "primary",
                     }
                     # Thread session title for memory provider scoping
@@ -1050,10 +1075,10 @@ def init_agent(
                         _init_kwargs["gateway_session_key"] = agent._gateway_session_key
                     # Profile identity for per-profile provider scoping
                     try:
-                        from hermes_cli.profiles import get_active_profile_name
+                        from iterativ_cli.profiles import get_active_profile_name
                         _profile = get_active_profile_name()
                         _init_kwargs["agent_identity"] = _profile
-                        _init_kwargs["agent_workspace"] = "hermes"
+                        _init_kwargs["agent_workspace"] = "iterativ"
                     except Exception:
                         pass
                     agent._memory_manager.initialize_all(**_init_kwargs)
@@ -1214,7 +1239,7 @@ def init_agent(
     # Resolve custom_providers list once for reuse below (startup
     # context-length override and plugin context-engine init).
     try:
-        from hermes_cli.config import get_compatible_custom_providers
+        from iterativ_cli.config import get_compatible_custom_providers
         _custom_providers = get_compatible_custom_providers(_agent_cfg)
     except Exception:
         _custom_providers = _agent_cfg.get("custom_providers")
@@ -1228,7 +1253,7 @@ def init_agent(
     # Check custom_providers per-model context_length
     if _config_context_length is None and _custom_providers:
         try:
-            from hermes_cli.config import get_custom_provider_context_length
+            from iterativ_cli.config import get_custom_provider_context_length
             _cp_ctx_resolved = get_custom_provider_context_length(
                 model=agent.model,
                 base_url=agent.base_url,
@@ -1306,7 +1331,7 @@ def init_agent(
         # Try general plugin system as fallback
         if _selected_engine is None:
             try:
-                from hermes_cli.plugins import get_plugin_context_engine
+                from iterativ_cli.plugins import get_plugin_context_engine
                 _candidate = get_plugin_context_engine()
                 if _candidate and _candidate.name == _engine_name:
                     _selected_engine = _candidate
@@ -1367,7 +1392,7 @@ def init_agent(
         raise ValueError(
             f"Model {agent.model} has a context window of {_ctx:,} tokens, "
             f"which is below the minimum {MINIMUM_CONTEXT_LENGTH:,} required "
-            f"by Hermes Agent.  Choose a model with at least "
+            f"by Iterativ Agent.  Choose a model with at least "
             f"{MINIMUM_CONTEXT_LENGTH // 1000}K context, or set "
             f"model.context_length in config.yaml to override."
         )
@@ -1403,7 +1428,7 @@ def init_agent(
         try:
             agent.context_compressor.on_session_start(
                 agent.session_id,
-                hermes_home=str(get_hermes_home()),
+                iterativ_home=str(get_iterativ_home()),
                 platform=agent.platform or "cli",
                 model=agent.model,
                 context_length=getattr(agent.context_compressor, "context_length", 0),

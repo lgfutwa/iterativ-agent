@@ -8,7 +8,7 @@ description: >
   running locally.
 platforms: [linux, macos, windows]
 version: 1.0.0
-author: Hermes Agent + Nous Research
+author: Hermes Agent + Iterativ Knowledge
 license: MIT
 metadata:
   hermes:

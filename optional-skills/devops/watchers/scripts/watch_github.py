@@ -3,12 +3,12 @@
 
 Usage (via cron with --no-agent):
 
-    hermes cron create hermes-issues \\
+    iterativ cron create iterativ-issues \\
       --schedule "*/5 * * * *" --no-agent \\
       --script "$HERMES_HOME/skills/devops/watchers/scripts/watch_github.py" \\
-      --script-args "--name hermes-issues --repo NousResearch/hermes-agent --scope issues"
+      --script-args "--name iterativ-issues --repo IterativKnowledge/iterativ-agent --scope issues"
 
-Set GITHUB_TOKEN (or GH_TOKEN) in ~/.hermes/.env to avoid the 60 req/hr
+Set GITHUB_TOKEN (or GH_TOKEN) in ~/.iterativ/.env to avoid the 60 req/hr
 anonymous rate limit.
 
 Scopes: issues | pulls | releases | commits.  Or pass --search QUERY to

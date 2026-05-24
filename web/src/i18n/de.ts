@@ -55,7 +55,7 @@ export const de: Translations = {
     closeNavigation: "Navigation schließen",
     closeModelTools: "Modell und Werkzeuge schließen",
     footer: {
-      org: "Nous Research",
+      org: "Iterativ Knowledge",
     },
     activeSessionsLabel: "Aktive Sitzungen:",
     gatewayStatusLabel: "Gateway-Status:",
@@ -120,8 +120,8 @@ export const de: Translations = {
     starting: "Startet",
     startedInBackground: "Im Hintergrund gestartet — siehe Protokolle für den Fortschritt",
     stopped: "Gestoppt",
-    updateHermes: "Hermes aktualisieren",
-    updatingHermes: "Hermes wird aktualisiert…",
+    updateIterativ: "Iterativ aktualisieren",
+    updatingIterativ: "Iterativ wird aktualisiert…",
     waitingForOutput: "Warte auf Ausgabe…",
   },
 
@@ -266,7 +266,7 @@ export const de: Translations = {
     enableRuntime: "Aktivieren",
     forceReinstall: "Neuinstallation erzwingen (bestehenden Ordner zuerst löschen)",
     headline:
-      "Hermes-Plugins entdecken, installieren, aktivieren und aktualisieren (entspricht `hermes plugins`).",
+      "Hermes-Plugins entdecken, installieren, aktivieren und aktualisieren (entspricht `iterativ plugins`).",
     identifierLabel: "Git-URL oder owner/repo",
     inactive: "inaktiv",
     installBtn: "Aus Git installieren",
@@ -283,8 +283,8 @@ export const de: Translations = {
     providersHint:
       "Schreibt memory.provider (leer = eingebaut) und context.engine in config.yaml. Wirkt sich auf die nächste Sitzung aus.",
     refreshDashboard: "Dashboard-Erweiterungen erneut scannen",
-    removeConfirm: "Dieses Plugin aus ~/.hermes/plugins/ entfernen?",
-    removeHint: "Nur vom Benutzer installierte Plugins unter ~/.hermes/plugins können entfernt werden.",
+    removeConfirm: "Dieses Plugin aus ~/.iterativ/plugins/ entfernen?",
+    removeHint: "Nur vom Benutzer installierte Plugins unter ~/.iterativ/plugins können entfernt werden.",
     rescanHeading: "SPA-Plugin-Registry",
     rescanHint: "Nach dem Hinzufügen von Dateien auf dem Datenträger erneut scannen, damit die Sidebar neue Manifeste erkennt.",
     runtimeHeading: "Gateway-Laufzeit (YAML-Plugins)",
@@ -306,7 +306,7 @@ export const de: Translations = {
     all: "Alle",
     categories: "Kategorien",
     filters: "Filter",
-    noSkills: "Keine Skills gefunden. Skills werden aus ~/.hermes/skills/ geladen",
+    noSkills: "Keine Skills gefunden. Skills werden aus ~/.iterativ/skills/ geladen",
     noSkillsMatch: "Keine Skills entsprechen deiner Suche oder deinem Filter.",
     skillCount: "{count} Skill{s}",
     resultCount: "{count} Ergebnis{s}",
@@ -320,7 +320,7 @@ export const de: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.iterativ/config.yaml",
     filters: "Filter",
     sections: "Bereiche",
     exportConfig: "Konfiguration als JSON exportieren",

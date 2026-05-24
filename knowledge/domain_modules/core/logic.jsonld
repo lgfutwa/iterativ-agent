@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "k2": "https://iterativ.ai/knowledge-ii#",
+    "name": "k2:name",
+    "concepts": "k2:concepts",
+    "relationships": "k2:relationships",
+    "trusted_sources": "k2:trustedSources",
+    "linked_skills": "k2:linkedSkills"
+  },
+  "@id": "core.logic",
+  "name": "core.logic",
+  "description": "Foundational reasoning, inference, and consistency.",
+  "concepts": [
+    {
+      "@id": "core.logic.claim",
+      "name": "Claim",
+      "definition": "A proposition that can be supported, contradicted, revised, or expired."
+    },
+    {
+      "@id": "core.logic.contradiction",
+      "name": "Contradiction",
+      "definition": "A conflict between two claims that cannot both hold in the same domain and time frame."
+    },
+    {
+      "@id": "core.logic.provenance",
+      "name": "Provenance",
+      "definition": "The source chain explaining where a claim came from and how it entered the graph."
+    }
+  ],
+  "relationships": [
+    {
+      "source": "core.logic.claim",
+      "predicate": "derives_from",
+      "target": "core.logic.provenance"
+    },
+    {
+      "source": "core.logic.claim",
+      "predicate": "contradicts",
+      "target": "core.logic.claim"
+    }
+  ],
+  "trusted_sources": [
+    "User-confirmed memory writes",
+    "Structured tool outputs with explicit knowledge_claims"
+  ],
+  "linked_skills": []
+}

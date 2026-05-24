@@ -12,11 +12,11 @@ export function SidebarFooter() {
       className={cn(
         "flex shrink-0 items-center justify-between gap-2",
         "px-5 py-2.5",
-        "border-t border-stone-100",
+        "border-t border-[var(--studio-border-subtle)]",
       )}
     >
       <Typography
-        className="font-mono-ui text-[0.72rem] tabular-nums tracking-normal text-stone-500 lowercase"
+        className="font-mono-ui text-[0.72rem] tabular-nums tracking-normal text-[var(--studio-text-soft)] lowercase"
       >
         {status?.version != null ? `v${status.version}` : "—"}
       </Typography>
@@ -26,8 +26,8 @@ export function SidebarFooter() {
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
-          "text-[0.72rem] font-medium tracking-normal text-stone-500",
-          "transition-colors hover:text-stone-950",
+          "text-[0.72rem] font-medium tracking-normal text-[var(--studio-text-soft)]",
+          "transition-colors hover:text-[var(--studio-text)]",
           "focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-700/40",
         )}
       >

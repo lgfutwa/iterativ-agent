@@ -30,7 +30,7 @@ import re
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from hermes_constants import get_hermes_home
+from iterativ_constants import get_iterativ_home
 from typing import Dict, Any, List, Optional
 
 from utils import atomic_replace
@@ -49,12 +49,12 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 # Where memory files live — resolved dynamically so profile overrides
-# (HERMES_HOME env var changes) are always respected.  The old module-level
+# (ITERATIV_HOME env var changes) are always respected.  The old module-level
 # constant was cached at import time and could go stale if a profile switch
 # happened after the first import.
 def get_memory_dir() -> Path:
     """Return the profile-scoped memories directory."""
-    return get_hermes_home() / "memories"
+    return get_iterativ_home() / "memories"
 
 ENTRY_DELIMITER = "\n§\n"
 
@@ -79,7 +79,7 @@ _MEMORY_THREAT_PATTERNS = [
     # Persistence via shell rc
     (r'authorized_keys', "ssh_backdoor"),
     (r'\$HOME/\.ssh|\~/\.ssh', "ssh_access"),
-    (r'\$HOME/\.hermes/\.env|\~/\.hermes/\.env', "hermes_env"),
+    (r'\$HOME/\.iterativ/\.env|\~/\.iterativ/\.env', "iterativ_env"),
 ]
 
 # Subset of invisible chars for injection detection
@@ -115,11 +115,17 @@ class MemoryStore:
         Tool responses always reflect this live state.
     """
 
-    def __init__(self, memory_char_limit: int = 2200, user_char_limit: int = 1375):
+    def __init__(
+        self,
+        memory_char_limit: int = 2200,
+        user_char_limit: int = 1375,
+        knowledge_graph: Any = None,
+    ):
         self.memory_entries: List[str] = []
         self.user_entries: List[str] = []
         self.memory_char_limit = memory_char_limit
         self.user_char_limit = user_char_limit
+        self.knowledge_graph = knowledge_graph
         # Frozen snapshot for system prompt -- set once at load_from_disk()
         self._system_prompt_snapshot: Dict[str, str] = {"memory": "", "user": ""}
 
@@ -264,6 +270,7 @@ class MemoryStore:
             self._set_entries(target, entries)
             self.save_to_disk(target)
 
+        self._record_knowledge_write(target, content, action="add")
         return self._success_response(target, "Entry added.")
 
     def replace(self, target: str, old_text: str, new_content: str) -> Dict[str, Any]:
@@ -322,6 +329,12 @@ class MemoryStore:
             self._set_entries(target, entries)
             self.save_to_disk(target)
 
+        self._record_knowledge_write(
+            target,
+            new_content,
+            action="replace",
+            metadata={"old_text": old_text},
+        )
         return self._success_response(target, "Entry replaced.")
 
     def remove(self, target: str, old_text: str) -> Dict[str, Any]:
@@ -352,10 +365,16 @@ class MemoryStore:
                 # All identical -- safe to remove just the first
 
             idx = matches[0][0]
-            entries.pop(idx)
+            removed_content = entries.pop(idx)
             self._set_entries(target, entries)
             self.save_to_disk(target)
 
+        self._record_knowledge_write(
+            target,
+            f"Removed memory entry from {target}: {removed_content}",
+            action="remove",
+            metadata={"active": False, "old_text": old_text},
+        )
         return self._success_response(target, "Entry removed.")
 
     def format_for_system_prompt(self, target: str) -> Optional[str]:
@@ -389,6 +408,27 @@ class MemoryStore:
         if message:
             resp["message"] = message
         return resp
+
+    def _record_knowledge_write(
+        self,
+        target: str,
+        content: str,
+        *,
+        action: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Best-effort mirror from MEMORY.md/USER.md into Knowledge II."""
+        if not self.knowledge_graph:
+            return
+        try:
+            self.knowledge_graph.record_memory_entry(
+                target=target,
+                content=content,
+                action=action,
+                metadata=metadata or {},
+            )
+        except Exception as exc:
+            logger.debug("Knowledge II memory mirror failed: %s", exc, exc_info=True)
 
     def _render_block(self, target: str, entries: List[str]) -> str:
         """Render a system prompt block with header and usage indicator."""
@@ -580,7 +620,6 @@ registry.register(
     check_fn=check_memory_requirements,
     emoji="🧠",
 )
-
 
 
 

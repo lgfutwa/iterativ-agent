@@ -55,7 +55,7 @@ export const ja: Translations = {
     closeNavigation: "ナビゲーションを閉じる",
     closeModelTools: "モデルとツールを閉じる",
     footer: {
-      org: "Nous Research",
+      org: "Iterativ Knowledge",
     },
     activeSessionsLabel: "アクティブなセッション:",
     gatewayStatusLabel: "ゲートウェイの状態:",
@@ -120,8 +120,8 @@ export const ja: Translations = {
     starting: "起動中",
     startedInBackground: "バックグラウンドで起動しました — 進行状況はログをご確認ください",
     stopped: "停止",
-    updateHermes: "Iterativ を更新",
-    updatingHermes: "Iterativ を更新しています…",
+    updateIterativ: "Iterativ を更新",
+    updatingIterativ: "Iterativ を更新しています…",
     waitingForOutput: "出力を待機しています…",
   },
 
@@ -266,7 +266,7 @@ export const ja: Translations = {
     enableRuntime: "有効化",
     forceReinstall: "強制再インストール (既存のフォルダを先に削除)",
     headline:
-      "Iterativ プラグインを発見、インストール、有効化、更新します (`hermes plugins` 相当)。",
+      "Iterativ プラグインを発見、インストール、有効化、更新します (`iterativ plugins` 相当)。",
     identifierLabel: "Git URL または owner/repo",
     inactive: "非アクティブ",
     installBtn: "Git からインストール",
@@ -283,8 +283,8 @@ export const ja: Translations = {
     providersHint:
       "memory.provider (空 = 組み込み) と context.engine を config.yaml に書き込みます。次のセッションで有効になります。",
     refreshDashboard: "ダッシュボード拡張を再スキャン",
-    removeConfirm: "このプラグインを ~/.hermes/plugins/ から削除しますか？",
-    removeHint: "削除できるのは ~/.hermes/plugins 配下のユーザーがインストールしたプラグインのみです。",
+    removeConfirm: "このプラグインを ~/.iterativ/plugins/ から削除しますか？",
+    removeHint: "削除できるのは ~/.iterativ/plugins 配下のユーザーがインストールしたプラグインのみです。",
     rescanHeading: "SPA プラグインレジストリ",
     rescanHint: "ディスクにファイルを追加した後に再スキャンすると、ダッシュボードのサイドバーが新しいマニフェストを認識します。",
     runtimeHeading: "ゲートウェイランタイム (YAML プラグイン)",
@@ -306,7 +306,7 @@ export const ja: Translations = {
     all: "すべて",
     categories: "カテゴリ",
     filters: "フィルター",
-    noSkills: "スキルが見つかりません。スキルは ~/.hermes/skills/ から読み込まれます",
+    noSkills: "スキルが見つかりません。スキルは ~/.iterativ/skills/ から読み込まれます",
     noSkillsMatch: "検索またはフィルターに一致するスキルはありません。",
     skillCount: "{count} スキル{s}",
     resultCount: "{count} 件の結果{s}",
@@ -320,7 +320,7 @@ export const ja: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.iterativ/config.yaml",
     filters: "フィルター",
     sections: "セクション",
     exportConfig: "設定を JSON としてエクスポート",

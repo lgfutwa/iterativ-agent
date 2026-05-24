@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "k2": "https://iterativ.ai/knowledge-ii#",
+    "name": "k2:name",
+    "concepts": "k2:concepts",
+    "relationships": "k2:relationships",
+    "trusted_sources": "k2:trustedSources",
+    "linked_skills": "k2:linkedSkills"
+  },
+  "@id": "iterativ.iks",
+  "name": "iterativ.iks",
+  "description": "Iterativ Knowledge System concepts and genealogy.",
+  "concepts": [
+    {
+      "@id": "iterativ.iks.knowledge_genealogy",
+      "name": "Knowledge Genealogy",
+      "definition": "Traceable descent of concepts, claims, and decisions through sources, transforms, and revisions."
+    },
+    {
+      "@id": "iterativ.iks.knowledge_mediation",
+      "name": "Knowledge Mediation",
+      "definition": "Reasoning and tool execution shaped by explicit domain knowledge, provenance, and sufficiency checks."
+    },
+    {
+      "@id": "iterativ.iks.synthesis",
+      "name": "Knowledge Synthesis",
+      "definition": "Combining validated claims across domains to identify contradictions, gaps, patterns, and hypotheses."
+    }
+  ],
+  "relationships": [
+    {
+      "source": "iterativ.iks.knowledge_genealogy",
+      "predicate": "supports",
+      "target": "iterativ.iks.knowledge_mediation"
+    },
+    {
+      "source": "iterativ.iks.synthesis",
+      "predicate": "synthesizes",
+      "target": "iterativ.iks.knowledge_genealogy"
+    }
+  ],
+  "trusted_sources": [
+    "IKS authored materials",
+    "Stakeholder-approved Knowledge II proposals"
+  ],
+  "linked_skills": []
+}

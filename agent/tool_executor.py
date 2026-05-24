@@ -125,7 +125,7 @@ def execute_tool_calls_concurrent(agent, assistant_message, messages: list, effe
         block_result = None
         blocked_by_guardrail = False
         try:
-            from hermes_cli.plugins import get_pre_tool_call_block_message
+            from iterativ_cli.plugins import get_pre_tool_call_block_message
             block_message = get_pre_tool_call_block_message(
                 function_name, function_args, task_id=effective_task_id or "",
             )
@@ -505,7 +505,7 @@ def execute_tool_calls_sequential(agent, assistant_message, messages: list, effe
         # Check plugin hooks for a block directive before executing.
         _block_msg: Optional[str] = None
         try:
-            from hermes_cli.plugins import get_pre_tool_call_block_message
+            from iterativ_cli.plugins import get_pre_tool_call_block_message
             _block_msg = get_pre_tool_call_block_message(
                 function_name, function_args, task_id=effective_task_id or "",
             )
@@ -614,7 +614,7 @@ def execute_tool_calls_sequential(agent, assistant_message, messages: list, effe
         elif function_name == "session_search":
             session_db = agent._get_session_db_for_recall()
             if not session_db:
-                from hermes_state import format_session_db_unavailable
+                from iterativ_state import format_session_db_unavailable
                 function_result = json.dumps({"success": False, "error": format_session_db_unavailable()})
             else:
                 from tools.session_search_tool import session_search as _session_search
@@ -632,6 +632,23 @@ def execute_tool_calls_sequential(agent, assistant_message, messages: list, effe
             tool_duration = time.time() - tool_start_time
             if agent._should_emit_quiet_tool_messages():
                 agent._vprint(f"  {_get_cute_tool_message_impl('session_search', function_args, tool_duration, result=function_result)}")
+        elif function_name == "knowledge_graph":
+            from tools.knowledge_tool import knowledge_graph_tool as _knowledge_graph_tool
+            function_result = _knowledge_graph_tool(
+                action=function_args.get("action", ""),
+                query=function_args.get("query", ""),
+                content=function_args.get("content", ""),
+                domain=function_args.get("domain", ""),
+                domains=function_args.get("domains"),
+                required_claims=function_args.get("required_claims"),
+                source_label=function_args.get("source_label", ""),
+                confidence=function_args.get("confidence"),
+                limit=function_args.get("limit", 10),
+                graph=getattr(agent, "_knowledge_graph", None),
+            )
+            tool_duration = time.time() - tool_start_time
+            if agent._should_emit_quiet_tool_messages():
+                agent._vprint(f"  {_get_cute_tool_message_impl('knowledge_graph', function_args, tool_duration, result=function_result)}")
         elif function_name == "memory":
             target = function_args.get("target", "memory")
             from tools.memory_tool import memory_tool as _memory_tool

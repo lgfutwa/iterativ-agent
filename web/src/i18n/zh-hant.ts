@@ -50,12 +50,12 @@ export const zhHant: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
+    brand: "Iterativ Agent",
     brandShort: "HA",
     closeNavigation: "關閉導覽",
     closeModelTools: "關閉模型與工具",
     footer: {
-      org: "Nous Research",
+      org: "Iterativ Knowledge",
     },
     activeSessionsLabel: "使用中工作階段：",
     gatewayStatusLabel: "閘道狀態：",
@@ -120,8 +120,8 @@ export const zhHant: Translations = {
     starting: "啟動中",
     startedInBackground: "已於背景啟動 — 請查看日誌以取得進度",
     stopped: "已停止",
-    updateHermes: "更新 Hermes",
-    updatingHermes: "正在更新 Hermes…",
+    updateIterativ: "更新 Iterativ",
+    updatingIterativ: "正在更新 Iterativ…",
     waitingForOutput: "等待輸出…",
   },
 
@@ -266,7 +266,7 @@ export const zhHant: Translations = {
     enableRuntime: "啟用",
     forceReinstall: "強制重新安裝（先刪除既有資料夾）",
     headline:
-      "探索、安裝、啟用並更新 Hermes 外掛（對齊 `hermes plugins` CLI）。",
+      "探索、安裝、啟用並更新 Iterativ 外掛（對齊 `iterativ plugins` CLI）。",
     identifierLabel: "Git 網址或 owner/repo",
     inactive: "未啟用",
     installBtn: "從 Git 安裝",
@@ -283,8 +283,8 @@ export const zhHant: Translations = {
     providersHint:
       "會寫入 config.yaml：memory.provider（留空為內建）與 context.engine。下一個工作階段生效。",
     refreshDashboard: "重新掃描儀表板擴充功能",
-    removeConfirm: "從 ~/.hermes/plugins/ 移除此外掛？",
-    removeHint: "僅可移除位於 ~/.hermes/plugins 下使用者安裝的外掛。",
+    removeConfirm: "從 ~/.iterativ/plugins/ 移除此外掛？",
+    removeHint: "僅可移除位於 ~/.iterativ/plugins 下使用者安裝的外掛。",
     rescanHeading: "SPA 外掛註冊表",
     rescanHint: "在磁碟新增檔案後重新掃描，使儀表板側邊欄載入新的 manifest。",
     runtimeHeading: "閘道執行階段（YAML 外掛）",
@@ -306,7 +306,7 @@ export const zhHant: Translations = {
     all: "全部",
     categories: "分類",
     filters: "篩選",
-    noSkills: "找不到技能。技能由 ~/.hermes/skills/ 載入",
+    noSkills: "找不到技能。技能由 ~/.iterativ/skills/ 載入",
     noSkillsMatch: "沒有符合搜尋或篩選條件的技能。",
     skillCount: "{count} 個技能",
     resultCount: "{count} 個結果",
@@ -320,7 +320,7 @@ export const zhHant: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.iterativ/config.yaml",
     filters: "篩選",
     sections: "分類",
     exportConfig: "匯出設定為 JSON",

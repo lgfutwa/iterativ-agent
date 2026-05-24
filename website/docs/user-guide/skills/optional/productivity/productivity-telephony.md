@@ -17,7 +17,7 @@ Give Hermes phone capabilities without core tool changes. Provision and persist 
 | Source | Optional — install with `hermes skills install official/productivity/telephony` |
 | Path | `optional-skills/productivity/telephony` |
 | Version | `1.0.0` |
-| Author | Nous Research |
+| Author | Iterativ Knowledge |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `telephony`, `phone`, `sms`, `mms`, `voice`, `twilio`, `bland.ai`, `vapi`, `calling`, `texting` |

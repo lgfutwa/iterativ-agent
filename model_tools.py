@@ -188,13 +188,13 @@ discover_builtin_tools()
 #
 # Each entry point now runs discovery explicitly at its own startup:
 #   - gateway/run.py            -> start_gateway() uses run_in_executor
-#   - cli.py, hermes_cli/*      -> inline on startup (no event loop)
+#   - cli.py, iterativ_cli/*      -> inline on startup (no event loop)
 #   - tui_gateway/server.py     -> inline on startup (no event loop)
 #   - acp_adapter/server.py     -> asyncio.to_thread on session init
 
 # Plugin tool discovery (user/project/pip plugins)
 try:
-    from hermes_cli.plugins import discover_plugins
+    from iterativ_cli.plugins import discover_plugins
     discover_plugins()
 except Exception as e:
     logger.debug("Plugin discovery failed: %s", e)
@@ -289,7 +289,7 @@ def get_tool_definitions(
     # invalidate hook on every config-writer.
     if quiet_mode:
         try:
-            from hermes_cli.config import get_config_path
+            from iterativ_cli.config import get_config_path
             cfg_path = get_config_path()
             cfg_stat = cfg_path.stat()
             cfg_fp = (cfg_stat.st_mtime_ns, cfg_stat.st_size)
@@ -300,7 +300,7 @@ def get_tool_definitions(
             frozenset(disabled_toolsets) if disabled_toolsets else None,
             registry._generation,
             cfg_fp,
-            bool(os.environ.get("HERMES_KANBAN_TASK")),
+            bool(os.environ.get("ITERATIV_KANBAN_TASK")),
         )
         cached = _tool_defs_cache.get(cache_key)
         if cached is not None:
@@ -337,8 +337,8 @@ def _compute_tool_definitions(
 
     if enabled_toolsets is not None:
         effective_enabled_toolsets = list(enabled_toolsets)
-        if os.environ.get("HERMES_KANBAN_TASK") and "kanban" not in effective_enabled_toolsets:
-            # Dispatcher-spawned workers are scoped by HERMES_KANBAN_TASK and
+        if os.environ.get("ITERATIV_KANBAN_TASK") and "kanban" not in effective_enabled_toolsets:
+            # Dispatcher-spawned workers are scoped by ITERATIV_KANBAN_TASK and
             # must always receive the lifecycle handoff tools. Assignee
             # profiles may intentionally restrict their normal chat toolsets
             # (for token/cost reasons), but that should not strip the kanban
@@ -364,7 +364,7 @@ def _compute_tool_definitions(
             tools_to_include.update(resolve_toolset(ts_name))
 
     # Always apply disabled toolsets as a subtraction step at the end.
-    # This ensures that even if a composite toolset (like hermes-cli)
+    # This ensures that even if a composite toolset (like iterativ-cli)
     # is enabled, any tools belonging to a disabled toolset are strictly
     # stripped out. See issue #17309.
     if disabled_toolsets:
@@ -492,7 +492,7 @@ def _compute_tool_definitions(
 # because they need agent-level state (TodoStore, MemoryStore, etc.).
 # The registry still holds their schemas; dispatch just returns a stub error
 # so if something slips through, the LLM sees a sensible message.
-_AGENT_LOOP_TOOLS = {"todo", "memory", "session_search", "delegate_task"}
+_AGENT_LOOP_TOOLS = {"todo", "memory", "session_search", "knowledge_graph", "delegate_task"}
 _READ_SEARCH_TOOLS = {"read_file", "search_files"}
 
 
@@ -784,7 +784,7 @@ def handle_function_call(
         if not skip_pre_tool_call_hook:
             block_message: Optional[str] = None
             try:
-                from hermes_cli.plugins import get_pre_tool_call_block_message
+                from iterativ_cli.plugins import get_pre_tool_call_block_message
                 block_message = get_pre_tool_call_block_message(
                     function_name,
                     function_args,
@@ -821,6 +821,20 @@ def handle_function_call(
             except Exception:
                 pass  # file_tools may not be loaded yet
 
+        knowledge_hooks = None
+        try:
+            from knowledge.hooks import get_knowledge_hooks
+
+            knowledge_hooks = get_knowledge_hooks()
+            knowledge_hooks.before_tool_execution(
+                tool_name=function_name,
+                args=function_args,
+                session_id=session_id or "",
+                task_id=task_id or "",
+            )
+        except Exception as _knowledge_err:
+            logger.debug("Knowledge II pre-tool hook error: %s", _knowledge_err)
+
         # Measure tool dispatch latency so post_tool_call and
         # transform_tool_result hooks can observe per-tool duration.
         # Inspired by Claude Code 2.1.119, which added ``duration_ms`` to
@@ -847,7 +861,7 @@ def handle_function_call(
         duration_ms = int((time.monotonic() - _dispatch_start) * 1000)
 
         try:
-            from hermes_cli.plugins import invoke_hook
+            from iterativ_cli.plugins import invoke_hook
             invoke_hook(
                 "post_tool_call",
                 tool_name=function_name,
@@ -868,7 +882,7 @@ def handle_function_call(
         # is appended back into conversation context. Fail-open; the first
         # valid string return wins; non-string returns are ignored.
         try:
-            from hermes_cli.plugins import invoke_hook
+            from iterativ_cli.plugins import invoke_hook
             hook_results = invoke_hook(
                 "transform_tool_result",
                 tool_name=function_name,
@@ -885,6 +899,20 @@ def handle_function_call(
                     break
         except Exception as _hook_err:
             logger.debug("transform_tool_result hook error: %s", _hook_err)
+
+        try:
+            if knowledge_hooks is not None:
+                knowledge_hooks.after_tool_execution(
+                    tool_name=function_name,
+                    args=function_args,
+                    result=result,
+                    session_id=session_id or "",
+                    task_id=task_id or "",
+                    tool_call_id=tool_call_id or "",
+                    duration_ms=duration_ms,
+                )
+        except Exception as _knowledge_err:
+            logger.debug("Knowledge II post-tool hook error: %s", _knowledge_err)
 
         return result
 

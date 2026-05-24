@@ -1,6 +1,6 @@
 """CLI commands for Honcho integration management.
 
-Handles: hermes honcho setup | status | sessions | map | peer
+Handles: iterativ honcho setup | status | sessions | map | peer
 """
 
 from __future__ import annotations
@@ -10,9 +10,9 @@ import os
 import sys
 from pathlib import Path
 
-from hermes_constants import get_hermes_home
+from iterativ_constants import get_iterativ_home
 from plugins.memory.honcho.client import resolve_active_host, resolve_config_path, HOST
-from hermes_cli.config import cfg_get
+from iterativ_cli.config import cfg_get
 
 
 def clone_honcho_for_profile(profile_name: str) -> bool:
@@ -96,7 +96,7 @@ def cmd_enable(args) -> None:
     """Enable Honcho for the active profile."""
     cfg = _read_config()
     host = _host_key()
-    label = f"[{host}] " if host != "hermes" else ""
+    label = f"[{host}] " if host != "iterativ" else ""
     block = cfg.setdefault("hosts", {}).setdefault(host, {})
 
     if block.get("enabled") is True:
@@ -139,7 +139,7 @@ def cmd_disable(args) -> None:
     """Disable Honcho for the active profile."""
     cfg = _read_config()
     host = _host_key()
-    label = f"[{host}] " if host != "hermes" else ""
+    label = f"[{host}] " if host != "iterativ" else ""
     block = cfg_get(cfg, "hosts", host, default={})
 
     if not block or block.get("enabled") is False:
@@ -159,7 +159,7 @@ def cmd_sync(args) -> None:
     have one yet. Inherits settings from the default host block.
     """
     try:
-        from hermes_cli.profiles import list_profiles
+        from iterativ_cli.profiles import list_profiles
         profiles = list_profiles()
     except Exception as e:
         print(f"  Could not list profiles: {e}\n")
@@ -167,7 +167,7 @@ def cmd_sync(args) -> None:
 
     cfg = _read_config()
     if not cfg:
-        print("  No Honcho config found. Run 'hermes honcho setup' first.\n")
+        print("  No Honcho config found. Run 'iterativ honcho setup' first.\n")
         return
 
     hosts = cfg.get("hosts", {})
@@ -175,7 +175,7 @@ def cmd_sync(args) -> None:
     has_key = bool(cfg.get("apiKey") or os.environ.get("HONCHO_API_KEY"))
 
     if not default_block and not has_key:
-        print("  Honcho not configured on default profile. Run 'hermes honcho setup' first.\n")
+        print("  Honcho not configured on default profile. Run 'iterativ honcho setup' first.\n")
         return
 
     created = 0
@@ -184,7 +184,7 @@ def cmd_sync(args) -> None:
         if p.name == "default":
             continue
         if clone_honcho_for_profile(p.name):
-            print(f"  + {p.name} -> hermes.{p.name}")
+            print(f"  + {p.name} -> iterativ.{p.name}")
             created += 1
         else:
             skipped += 1
@@ -201,10 +201,10 @@ def cmd_sync(args) -> None:
 def sync_honcho_profiles_quiet() -> int:
     """Sync Honcho host blocks for all profiles. Returns count of newly created blocks.
 
-    Called from `hermes update` -- no output, no exceptions.
+    Called from `iterativ update` -- no output, no exceptions.
     """
     try:
-        from hermes_cli.profiles import list_profiles
+        from iterativ_cli.profiles import list_profiles
         profiles = list_profiles()
     except Exception:
         return 0
@@ -251,7 +251,7 @@ def _local_config_path() -> Path:
     its own config file.  The global ~/.honcho/config.json is only used as
     a read fallback (via resolve_config_path) for cross-app interop.
     """
-    return get_hermes_home() / "honcho.json"
+    return get_iterativ_home() / "honcho.json"
 
 
 def _read_config() -> dict:
@@ -371,7 +371,7 @@ def cmd_setup(args) -> None:
         return
 
     hosts = cfg.setdefault("hosts", {})
-    hermes_host = hosts.setdefault(_host_key(), {})
+    iterativ_host = hosts.setdefault(_host_key(), {})
 
     # --- 1. Cloud or local? ---
     print("  Deployment:")
@@ -416,38 +416,38 @@ def cmd_setup(args) -> None:
 
         if not cfg.get("apiKey"):
             print("\n  No API key configured. Get yours at https://app.honcho.dev")
-            print("  Run 'hermes honcho setup' again once you have a key.\n")
+            print("  Run 'iterativ honcho setup' again once you have a key.\n")
             return
 
     # --- 3. Identity ---
-    current_peer = hermes_host.get("peerName") or cfg.get("peerName", "")
+    current_peer = iterativ_host.get("peerName") or cfg.get("peerName", "")
     new_peer = _prompt("Your name (user peer)", default=current_peer or os.getenv("USER", "user"))
     if new_peer:
-        hermes_host["peerName"] = new_peer
+        iterativ_host["peerName"] = new_peer
 
-    current_ai = hermes_host.get("aiPeer") or cfg.get("aiPeer", "hermes")
+    current_ai = iterativ_host.get("aiPeer") or cfg.get("aiPeer", "iterativ")
     new_ai = _prompt("AI peer name", default=current_ai)
     if new_ai:
-        hermes_host["aiPeer"] = new_ai
+        iterativ_host["aiPeer"] = new_ai
 
-    current_workspace = hermes_host.get("workspace") or cfg.get("workspace", "hermes")
+    current_workspace = iterativ_host.get("workspace") or cfg.get("workspace", "iterativ")
     new_workspace = _prompt("Workspace ID", default=current_workspace)
     if new_workspace:
-        hermes_host["workspace"] = new_workspace
+        iterativ_host["workspace"] = new_workspace
 
     # --- 4. Observation mode ---
-    current_obs = hermes_host.get("observationMode") or cfg.get("observationMode", "directional")
+    current_obs = iterativ_host.get("observationMode") or cfg.get("observationMode", "directional")
     print("\n  Observation mode:")
     print("    directional  -- all observations on, each AI peer builds its own view (default)")
     print("    unified      -- shared pool, user observes self, AI observes others only")
     new_obs = _prompt("Observation mode", default=current_obs)
     if new_obs in {"unified", "directional"}:
-        hermes_host["observationMode"] = new_obs
+        iterativ_host["observationMode"] = new_obs
     else:
-        hermes_host["observationMode"] = "directional"
+        iterativ_host["observationMode"] = "directional"
 
     # --- 5. Write frequency ---
-    current_wf = str(hermes_host.get("writeFrequency") or cfg.get("writeFrequency", "async"))
+    current_wf = str(iterativ_host.get("writeFrequency") or cfg.get("writeFrequency", "async"))
     print("\n  Write frequency:")
     print("    async   -- background thread, no token cost (recommended)")
     print("    turn    -- sync write after every turn")
@@ -455,12 +455,12 @@ def cmd_setup(args) -> None:
     print("    N       -- write every N turns (e.g. 5)")
     new_wf = _prompt("Write frequency", default=current_wf)
     try:
-        hermes_host["writeFrequency"] = int(new_wf)
+        iterativ_host["writeFrequency"] = int(new_wf)
     except (ValueError, TypeError):
-        hermes_host["writeFrequency"] = new_wf if new_wf in {"async", "turn", "session"} else "async"
+        iterativ_host["writeFrequency"] = new_wf if new_wf in {"async", "turn", "session"} else "async"
 
     # --- 6. Recall mode ---
-    _raw_recall = hermes_host.get("recallMode") or cfg.get("recallMode", "hybrid")
+    _raw_recall = iterativ_host.get("recallMode") or cfg.get("recallMode", "hybrid")
     current_recall = "hybrid" if _raw_recall not in {"hybrid", "context", "tools"} else _raw_recall
     print("\n  Recall mode:")
     print("    hybrid  -- auto-injected context + Honcho tools available (default)")
@@ -468,29 +468,29 @@ def cmd_setup(args) -> None:
     print("    tools   -- Honcho tools only, no auto-injected context")
     new_recall = _prompt("Recall mode", default=current_recall)
     if new_recall in {"hybrid", "context", "tools"}:
-        hermes_host["recallMode"] = new_recall
+        iterativ_host["recallMode"] = new_recall
 
     # --- 7. Context token budget ---
-    current_ctx_tokens = hermes_host.get("contextTokens") or cfg.get("contextTokens")
+    current_ctx_tokens = iterativ_host.get("contextTokens") or cfg.get("contextTokens")
     current_display = str(current_ctx_tokens) if current_ctx_tokens else "uncapped"
     print("\n  Context injection per turn (hybrid/context recall modes only):")
     print("    uncapped -- no limit (default)")
     print("    N        -- token limit per turn (e.g. 1200)")
     new_ctx_tokens = _prompt("Context tokens", default=current_display)
     if new_ctx_tokens.strip().lower() in {"none", "uncapped", "no limit"}:
-        hermes_host.pop("contextTokens", None)
+        iterativ_host.pop("contextTokens", None)
     elif new_ctx_tokens.strip() == "":
         pass  # keep current
     else:
         try:
             val = int(new_ctx_tokens)
             if val >= 0:
-                hermes_host["contextTokens"] = val
+                iterativ_host["contextTokens"] = val
         except (ValueError, TypeError):
             pass  # keep current
 
     # --- 7b. Dialectic cadence ---
-    current_dialectic = str(hermes_host.get("dialecticCadence") or cfg.get("dialecticCadence") or "2")
+    current_dialectic = str(iterativ_host.get("dialecticCadence") or cfg.get("dialecticCadence") or "2")
     print("\n  Dialectic cadence:")
     print("    How often Honcho rebuilds its user model (LLM call on Honcho backend).")
     print("    1 = every turn, 2 = every other turn, 3+ = sparser.")
@@ -499,13 +499,13 @@ def cmd_setup(args) -> None:
     try:
         val = int(new_dialectic)
         if val >= 1:
-            hermes_host["dialecticCadence"] = val
+            iterativ_host["dialecticCadence"] = val
     except (ValueError, TypeError):
-        hermes_host["dialecticCadence"] = 2
+        iterativ_host["dialecticCadence"] = 2
 
     # --- 7c. Dialectic reasoning level ---
     current_reasoning = (
-        hermes_host.get("dialecticReasoningLevel")
+        iterativ_host.get("dialecticReasoningLevel")
         or cfg.get("dialecticReasoningLevel")
         or "low"
     )
@@ -518,12 +518,12 @@ def cmd_setup(args) -> None:
     print("    max      -- thorough audit-level analysis")
     new_reasoning = _prompt("Reasoning level", default=current_reasoning)
     if new_reasoning in {"minimal", "low", "medium", "high", "max"}:
-        hermes_host["dialecticReasoningLevel"] = new_reasoning
+        iterativ_host["dialecticReasoningLevel"] = new_reasoning
     else:
-        hermes_host["dialecticReasoningLevel"] = "low"
+        iterativ_host["dialecticReasoningLevel"] = "low"
 
     # --- 8. Session strategy ---
-    current_strat = hermes_host.get("sessionStrategy") or cfg.get("sessionStrategy", "per-session")
+    current_strat = iterativ_host.get("sessionStrategy") or cfg.get("sessionStrategy", "per-session")
     print("\n  Session strategy:")
     print("    per-session   -- each run starts clean, Honcho injects context automatically")
     print("    per-directory -- reuses session per dir, prior context auto-injected each run")
@@ -531,24 +531,24 @@ def cmd_setup(args) -> None:
     print("    global        -- single session across all directories")
     new_strat = _prompt("Session strategy", default=current_strat)
     if new_strat in {"per-session", "per-repo", "per-directory", "global"}:
-        hermes_host["sessionStrategy"] = new_strat
+        iterativ_host["sessionStrategy"] = new_strat
 
-    hermes_host["enabled"] = True
-    hermes_host.setdefault("saveMessages", True)
+    iterativ_host["enabled"] = True
+    iterativ_host.setdefault("saveMessages", True)
 
     _write_config(cfg)
     print(f"\n  Config written to {write_path}")
 
     # --- Auto-enable Honcho as memory provider in config.yaml ---
     try:
-        from hermes_cli.config import load_config, save_config
-        hermes_config = load_config()
-        hermes_config.setdefault("memory", {})["provider"] = "honcho"
-        save_config(hermes_config)
+        from iterativ_cli.config import load_config, save_config
+        iterativ_config = load_config()
+        iterativ_config.setdefault("memory", {})["provider"] = "honcho"
+        save_config(iterativ_config)
         print("  Memory provider set to 'honcho' in config.yaml")
     except Exception as e:
         print(f"  Could not auto-enable in config.yaml: {e}")
-        print("  Run: hermes config set memory.provider honcho")
+        print("  Run: iterativ config set memory.provider honcho")
 
     # --- Test connection ---
     print("  Testing connection... ", end="", flush=True)
@@ -578,11 +578,11 @@ def cmd_setup(args) -> None:
     print("    honcho_reasoning -- ask Honcho a question, synthesized answer")
     print("    honcho_conclude  -- persist a user fact to memory")
     print("\n  Other commands:")
-    print("    hermes honcho status     -- show full config")
-    print("    hermes honcho mode       -- change recall/observation mode")
-    print("    hermes honcho tokens     -- tune context and dialectic budgets")
-    print("    hermes honcho peer       -- update peer names")
-    print("    hermes honcho map <name> -- map this directory to a session name\n")
+    print("    iterativ honcho status     -- show full config")
+    print("    iterativ honcho mode       -- change recall/observation mode")
+    print("    iterativ honcho tokens     -- tune context and dialectic budgets")
+    print("    iterativ honcho peer       -- update peer names")
+    print("    iterativ honcho map <name> -- map this directory to a session name\n")
 
 
 def _active_profile_name() -> str:
@@ -590,7 +590,7 @@ def _active_profile_name() -> str:
     if _profile_override:
         return _profile_override
     try:
-        from hermes_cli.profiles import get_active_profile_name
+        from iterativ_cli.profiles import get_active_profile_name
         return get_active_profile_name()
     except Exception:
         return "default"
@@ -602,7 +602,7 @@ def _all_profile_host_configs() -> list[tuple[str, str, dict]]:
     Reads honcho.json once and maps each profile to its host block.
     """
     try:
-        from hermes_cli.profiles import list_profiles
+        from iterativ_cli.profiles import list_profiles
         profiles = list_profiles()
     except Exception:
         return [(_active_profile_name(), _host_key(), {})]
@@ -635,7 +635,7 @@ def cmd_status(args) -> None:
     try:
         import honcho  # noqa: F401
     except ImportError:
-        print("  honcho-ai is not installed. Run: hermes honcho setup\n")
+        print("  honcho-ai is not installed. Run: iterativ honcho setup\n")
         return
 
     cfg = _read_config()
@@ -645,7 +645,7 @@ def cmd_status(args) -> None:
 
     if not cfg:
         print(f"  No Honcho config found at {active_path}")
-        print("  Run 'hermes honcho setup' to configure.\n")
+        print("  Run 'iterativ honcho setup' to configure.\n")
         return
 
     try:
@@ -796,7 +796,7 @@ def cmd_sessions(args) -> None:
 
     if not sessions:
         print("  No session mappings configured.\n")
-        print("  Add one with: hermes honcho map <session-name>")
+        print("  Add one with: iterativ honcho map <session-name>")
         print(f"  Or edit {_config_path()} directly.\n")
         return
 
@@ -847,16 +847,16 @@ def cmd_peer(args) -> None:
     if user_name is None and ai_name is None and reasoning is None:
         # Show current values
         hosts = cfg.get("hosts", {})
-        hermes = hosts.get(_host_key(), {})
-        user = hermes.get('peerName') or cfg.get('peerName') or '(not set)'
-        ai = hermes.get('aiPeer') or cfg.get('aiPeer') or _host_key()
-        lvl = hermes.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
-        max_chars = hermes.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
+        iterativ = hosts.get(_host_key(), {})
+        user = iterativ.get('peerName') or cfg.get('peerName') or '(not set)'
+        ai = iterativ.get('aiPeer') or cfg.get('aiPeer') or _host_key()
+        lvl = iterativ.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
+        max_chars = iterativ.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
         print("\nHoncho peers\n" + "─" * 40)
         print(f"  User peer:   {user}")
         print("    Your identity in Honcho. Messages you send build this peer's card.")
         print(f"  AI peer:     {ai}")
-        print("    Hermes' identity in Honcho. Seed with 'hermes honcho identity <file>'.")
+        print("    Iterativ' identity in Honcho. Seed with 'iterativ honcho identity <file>'.")
         print("    Dialectic calls ask this peer questions to warm session context.")
         print()
         print(f"  Dialectic reasoning:  {lvl}  ({', '.join(REASONING_LEVELS)})")
@@ -864,7 +864,7 @@ def cmd_peer(args) -> None:
         return
 
     host = _host_key()
-    label = f"[{host}] " if host != "hermes" else ""
+    label = f"[{host}] " if host != "iterativ" else ""
 
     if user_name is not None:
         cfg.setdefault("hosts", {}).setdefault(host, {})["peerName"] = user_name.strip()
@@ -909,7 +909,7 @@ def cmd_mode(args) -> None:
         for m, desc in MODES.items():
             marker = " <-" if m == current else ""
             print(f"  {m:<10}  {desc}{marker}")
-        print(f"\n  Set with: hermes honcho mode [hybrid|context|tools]\n")
+        print(f"\n  Set with: iterativ honcho mode [hybrid|context|tools]\n")
         return
 
     if mode_arg not in MODES:
@@ -917,7 +917,7 @@ def cmd_mode(args) -> None:
         return
 
     host = _host_key()
-    label = f"[{host}] " if host != "hermes" else ""
+    label = f"[{host}] " if host != "iterativ" else ""
     cfg.setdefault("hosts", {}).setdefault(host, {})["recallMode"] = mode_arg
     _write_config(cfg)
     print(f"  {label}Recall mode -> {mode_arg}  ({MODES[mode_arg]})\n")
@@ -944,7 +944,7 @@ def cmd_strategy(args) -> None:
         for s, desc in STRATEGIES.items():
             marker = " <-" if s == current else ""
             print(f"  {s:<15}  {desc}{marker}")
-        print(f"\n  Set with: hermes honcho strategy [per-session|per-directory|per-repo|global]\n")
+        print(f"\n  Set with: iterativ honcho strategy [per-session|per-directory|per-repo|global]\n")
         return
 
     if strat_arg not in STRATEGIES:
@@ -952,7 +952,7 @@ def cmd_strategy(args) -> None:
         return
 
     host = _host_key()
-    label = f"[{host}] " if host != "hermes" else ""
+    label = f"[{host}] " if host != "iterativ" else ""
     cfg.setdefault("hosts", {}).setdefault(host, {})["sessionStrategy"] = strat_arg
     _write_config(cfg)
     print(f"  {label}Session strategy -> {strat_arg}  ({STRATEGIES[strat_arg]})\n")
@@ -962,15 +962,15 @@ def cmd_tokens(args) -> None:
     """Show or set token budget settings."""
     cfg = _read_config()
     hosts = cfg.get("hosts", {})
-    hermes = hosts.get(_host_key(), {})
+    iterativ_hosts = hosts.get(_host_key(), {})
 
     context = getattr(args, "context", None)
     dialectic = getattr(args, "dialectic", None)
 
     if context is None and dialectic is None:
-        ctx_tokens = hermes.get("contextTokens") or cfg.get("contextTokens") or "(Honcho default)"
-        d_chars = hermes.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
-        d_level = hermes.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
+        ctx_tokens = iterativ.get("contextTokens") or cfg.get("contextTokens") or "(Honcho default)"
+        d_chars = iterativ.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
+        d_level = iterativ.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
         print("\nHoncho budgets\n" + "─" * 40)
         print()
         print(f"  Context     {ctx_tokens} tokens")
@@ -982,11 +982,11 @@ def cmd_tokens(args) -> None:
         print("    (e.g. \"what were we working on?\") and Honcho runs its own model")
         print("    to synthesize an answer. Used for first-turn session continuity.")
         print("    Level controls how much reasoning Honcho spends on the answer.")
-        print("\n  Set with: hermes honcho tokens [--context N] [--dialectic N]\n")
+        print("\n  Set with: iterativ honcho tokens [--context N] [--dialectic N]\n")
         return
 
     host = _host_key()
-    label = f"[{host}] " if host != "hermes" else ""
+    label = f"[{host}] " if host != "iterativ" else ""
     changed = False
     if context is not None:
         cfg.setdefault("hosts", {}).setdefault(host, {})["contextTokens"] = context
@@ -1006,7 +1006,7 @@ def cmd_identity(args) -> None:
     """Seed AI peer identity or show both peer representations."""
     cfg = _read_config()
     if not _resolve_api_key(cfg):
-        print("  No API key configured. Run 'hermes honcho setup' first.\n")
+        print("  No API key configured. Run 'iterativ honcho setup' first.\n")
         return
 
     file_path = getattr(args, "file", None)
@@ -1043,7 +1043,7 @@ def cmd_identity(args) -> None:
             print(ai_rep["card"])
         else:
             print("  No representation built yet.")
-            print("  Run 'hermes honcho identity <file>' to seed one.")
+            print("  Run 'iterativ honcho identity <file>' to seed one.")
         print()
         return
 
@@ -1052,8 +1052,8 @@ def cmd_identity(args) -> None:
         print(f"  User peer: {hcfg.peer_name or 'not set'}")
         print(f"  AI peer:   {hcfg.ai_peer}")
         print()
-        print("    hermes honcho identity --show        — show both peer representations")
-        print("    hermes honcho identity <file>        — seed AI peer from SOUL.md or any .md/.txt\n")
+        print("    iterativ honcho identity --show        — show both peer representations")
+        print("    iterativ honcho identity <file>        — seed AI peer from SOUL.md or any .md/.txt\n")
         return
 
     from pathlib import Path
@@ -1126,17 +1126,17 @@ def cmd_migrate(args) -> None:
         print("  across sessions. You need an API key to use it.")
         print()
         print("  1. Get your API key at https://app.honcho.dev")
-        print("  2. Run:  hermes honcho setup")
+        print("  2. Run:  iterativ honcho setup")
         print("     Paste the key when prompted.")
         print()
-        answer = _prompt("  Run 'hermes honcho setup' now?", default="y")
+        answer = _prompt("  Run 'iterativ honcho setup' now?", default="y")
         if answer.lower() in {"y", "yes"}:
             cmd_setup(args)
             cfg = _read_config()
             has_key = bool(cfg.get("apiKey", ""))
         else:
             print()
-            print("  Run 'hermes honcho setup' when ready, then re-run this walkthrough.")
+            print("  Run 'iterativ honcho setup' when ready, then re-run this walkthrough.")
 
     # ── Step 2: Detected files ────────────────────────────────────────────────
     print()
@@ -1154,7 +1154,7 @@ def cmd_migrate(args) -> None:
     else:
         print("  No OpenClaw native memory files found in cwd or ~/.openclaw/.")
         print("  If your files are elsewhere, copy them here before continuing,")
-        print("  or seed them manually:  hermes honcho identity <path/to/file>")
+        print("  or seed them manually:  iterativ honcho identity <path/to/file>")
 
     # ── Step 3: Migrate user memory ───────────────────────────────────────────
     print()
@@ -1167,13 +1167,13 @@ def cmd_migrate(args) -> None:
     if user_files:
         print(f"  Found: {', '.join(f.name for f in user_files)}")
         print()
-        print("  These are picked up automatically the first time you run 'hermes'")
+        print("  These are picked up automatically the first time you run 'iterativ'")
         print("  with Honcho configured and no prior session history.")
         print("  (Hermes calls migrate_memory_files() on first session init.)")
         print()
         print("  If you want to migrate them now without starting a session:")
         for f in user_files:
-            print("    hermes honcho migrate  — this step handles it interactively")
+            print("    iterativ honcho migrate  — this step handles it interactively")
         if has_key:
             answer = _prompt("  Upload user memory files to Honcho now?", default="y")
             if answer.lower() in {"y", "yes"}:
@@ -1204,7 +1204,7 @@ def cmd_migrate(args) -> None:
                 except Exception as e:
                     print(f"  Failed: {e}")
         else:
-            print("  Run 'hermes honcho setup' first, then re-run this step.")
+            print("  Run 'iterativ honcho setup' first, then re-run this step.")
     else:
         print("  No user memory files detected. Nothing to migrate here.")
 
@@ -1250,12 +1250,12 @@ def cmd_migrate(args) -> None:
                 except Exception as e:
                     print(f"  Failed: {e}")
         else:
-            print("  Run 'hermes honcho setup' first, then seed manually:")
+            print("  Run 'iterativ honcho setup' first, then seed manually:")
             for f in agent_files:
-                print(f"    hermes honcho identity {f}")
+                print(f"    iterativ honcho identity {f}")
     else:
         print("  No agent identity files detected.")
-        print("  To seed manually:  hermes honcho identity <path/to/SOUL.md>")
+        print("  To seed manually:  iterativ honcho identity <path/to/SOUL.md>")
 
     # ── Step 5: What changes ──────────────────────────────────────────────────
     print()
@@ -1286,22 +1286,22 @@ def cmd_migrate(args) -> None:
     print("  Session naming")
     print("    OpenClaw: no persistent session concept — files are global.")
     print("    Hermes:   per-session by default — each run gets its own session")
-    print("              Map a custom name:  hermes honcho map <session-name>")
+    print("              Map a custom name:  iterativ honcho map <session-name>")
 
     # ── Step 6: Next steps ────────────────────────────────────────────────────
     print()
     print("Step 6  Next steps")
     print()
     if not has_key:
-        print("  1. hermes honcho setup              — configure API key (required)")
-        print("  2. hermes honcho migrate            — re-run this walkthrough")
+        print("  1. iterativ honcho setup              — configure API key (required)")
+        print("  2. iterativ honcho migrate            — re-run this walkthrough")
     else:
-        print("  1. hermes honcho status             — verify Honcho connection")
-        print("  2. hermes                           — start a session")
+        print("  1. iterativ honcho status             — verify Honcho connection")
+        print("  2. iterativ                           — start a session")
         print("     (user memory files auto-uploaded on first turn if not done above)")
-        print("  3. hermes honcho identity --show    — verify AI peer representation")
-        print("  4. hermes honcho tokens             — tune context and dialectic budgets")
-        print("  5. hermes honcho mode               — view or change memory mode")
+        print("  3. iterativ honcho identity --show    — verify AI peer representation")
+        print("  4. iterativ honcho tokens             — tune context and dialectic budgets")
+        print("  5. iterativ honcho mode               — view or change memory mode")
     print()
 
 
@@ -1314,8 +1314,8 @@ def honcho_command(args) -> None:
     if sub == "setup":
         # Redirect to memory setup — honcho setup goes through the unified path
         print("\n  Honcho is configured via the memory provider system.")
-        print("  Running 'hermes memory setup'...\n")
-        from hermes_cli.memory_setup import cmd_setup_provider
+        print("  Running 'iterativ memory setup'...\n")
+        from iterativ_cli.memory_setup import cmd_setup_provider
         cmd_setup_provider("honcho")
         return
     elif sub is None:
@@ -1352,10 +1352,10 @@ def honcho_command(args) -> None:
 
 
 def register_cli(subparser) -> None:
-    """Build the ``hermes honcho`` argparse subcommand tree.
+    """Build the ``iterativ honcho`` argparse subcommand tree.
 
     Called by the plugin CLI registration system during argparse setup.
-    The *subparser* is the parser for ``hermes honcho``.
+    The *subparser* is the parser for ``iterativ honcho``.
     """
 
     subparser.add_argument(
@@ -1366,7 +1366,7 @@ def register_cli(subparser) -> None:
 
     subs.add_parser(
         "setup",
-        help="Initial Honcho setup (redirects to hermes memory setup)",
+        help="Initial Honcho setup (redirects to iterativ memory setup)",
     )
 
     status_parser = subs.add_parser(

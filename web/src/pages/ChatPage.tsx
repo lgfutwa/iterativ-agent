@@ -1,5 +1,5 @@
 /**
- * ChatPage — embeds `hermes --tui` inside the dashboard.
+ * ChatPage — embeds `iterativ --tui` inside the dashboard.
  *
  *   <div host> (dashboard chrome)                                         .
  *     └─ <div wrapper> (rounded, dark bg, padded — the "terminal window"  .
@@ -11,7 +11,7 @@
  *              ▼                                                          .
  *     WebSocket /api/pty?token=<session>                                  .
  *          ▼                                                              .
- *     FastAPI pty_ws  (hermes_cli/web_server.py)                          .
+ *     FastAPI pty_ws  (iterativ_cli/web_server.py)                          .
  *          ▼                                                              .
  *     POSIX PTY → `node ui-tui/dist/entry.js` → tui_gateway + AIAgent     .
  */
@@ -24,7 +24,7 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Typography } from "@/components/NouiTypography";
-import { HERMES_BASE_PATH } from "@/lib/api";
+import { ITERATIV_BASE_PATH } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Copy, PanelRight, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -45,7 +45,7 @@ function buildWsUrl(
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   const qs = new URLSearchParams({ token, channel });
   if (resume) qs.set("resume", resume);
-  return `${proto}//${window.location.host}${HERMES_BASE_PATH}/api/pty?${qs.toString()}`;
+  return `${proto}//${window.location.host}${ITERATIV_BASE_PATH}/api/pty?${qs.toString()}`;
 }
 
 // Channel id ties this chat tab's PTY child (publisher) to its sidebar
@@ -59,16 +59,14 @@ function generateChannelId(): string {
   return `chat-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 }
 
-// Colors for the terminal body.  Matches the dashboard's dark teal canvas
-// with cream foreground — we intentionally don't pick monokai or a loud
-// theme, because the TUI's skin engine already paints the content; the
-// terminal chrome just needs to sit quietly inside the dashboard.
+// Colors for the terminal body. Keep the web chrome light and low-contrast
+// so the embedded TUI feels like part of the clean dashboard canvas.
 const TERMINAL_THEME = {
-  background: "#11110f",
-  foreground: "#f5f1e8",
-  cursor: "#5eead4",
-  cursorAccent: "#11110f",
-  selectionBackground: "#14b8a644",
+  background: "#fffefa",
+  foreground: "#2b2f33",
+  cursor: "#4a6f76",
+  cursorAccent: "#fffefa",
+  selectionBackground: "#dbe7ec",
 };
 
 /**
@@ -117,8 +115,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   // Lazy-init: the missing-token check happens at construction so the effect
   // body doesn't have to setState (React 19's set-state-in-effect rule).
   const [banner, setBanner] = useState<string | null>(() =>
-    typeof window !== "undefined" && !window.__HERMES_SESSION_TOKEN__
-      ? "Session token unavailable. Open this page through `hermes dashboard`, not directly."
+    typeof window !== "undefined" && !window.__ITERATIV_SESSION_TOKEN__
+      ? "Session token unavailable. Open this page through `iterativ dashboard`, not directly."
       : null,
   );
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
@@ -133,9 +131,11 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   // tabs because the dep wouldn't change on tab switch.
   const [mobilePanelOpenRaw, setMobilePanelOpenRaw] = useState(false);
   const mobilePanelOpen = isActive && mobilePanelOpenRaw;
+  const [desktopPanelOpenRaw, setDesktopPanelOpenRaw] = useState(false);
   const { setEnd } = usePageHeader();
   const { t } = useI18n();
   const closeMobilePanel = useCallback(() => setMobilePanelOpenRaw(false), []);
+  const closeDesktopPanel = useCallback(() => setDesktopPanelOpenRaw(false), []);
   const modelToolsLabel = useMemo(
     () => `${t.app.modelToolsSheetTitle} ${t.app.modelToolsSheetSubtitle}`,
     [t.app.modelToolsSheetSubtitle, t.app.modelToolsSheetTitle],
@@ -148,6 +148,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       ? window.matchMedia("(max-width: 1023px)").matches
       : false,
   );
+  const desktopPanelOpen = isActive && !narrow && desktopPanelOpenRaw;
 
   // The dashboard keeps ChatPage mounted persistently so the PTY survives tab
   // switches. That is great for ordinary /chat navigation, but it means query
@@ -156,8 +157,12 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   // treat the current resume target as part of the PTY identity and rebuild the
   // terminal session when it changes.
   const resumeParam = searchParams.get("resume");
+  const newThreadParam = searchParams.get("thread");
   const initialPromptParam = searchParams.get("prompt");
-  const channel = useMemo(() => generateChannelId(), [resumeParam]);
+  const channel = useMemo(() => {
+    const seed = newThreadParam || resumeParam || "chat";
+    return `${seed}-${generateChannelId()}`;
+  }, [resumeParam, newThreadParam]);
   const pendingInitialPromptRef = useRef<string | null>(null);
   const sentInitialPromptRef = useRef<string | null>(null);
 
@@ -246,6 +251,15 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   }, [mobilePanelOpen, closeMobilePanel]);
 
   useEffect(() => {
+    if (!desktopPanelOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeDesktopPanel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [desktopPanelOpen, closeDesktopPanel]);
+
+  useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
     const onChange = (e: MediaQueryListEvent) => {
       if (e.matches) setMobilePanelOpenRaw(false);
@@ -309,7 +323,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     const host = hostRef.current;
     if (!host) return;
 
-    const token = window.__HERMES_SESSION_TOKEN__;
+    const token = window.__ITERATIV_SESSION_TOKEN__;
     // Banner already initialised above; just bail before wiring xterm/WS.
     if (!token) {
       return;
@@ -328,7 +342,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       fontWeightBold: "700",
       macOptionIsMeta: true,
       // Hold Option (Alt on Linux/Windows) to force native text selection
-      // even when the inner Hermes TUI has enabled xterm mouse-events
+      // even when the inner Iterativ TUI has enabled xterm mouse-events
       // mode (CSI ?1000h family). Without this, click-and-drag in the
       // chat canvas selects nothing and Cmd+C falls back to copying the
       // entire visible buffer, which is rarely what the user wants.
@@ -354,7 +368,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     //      terminal has a selection, then emits an OSC 52 escape.  Our
     //      OSC 52 handler below decodes that escape and writes to the
     //      browser clipboard — so the flow works just like it does in
-    //      `hermes --tui`.
+    //      `iterativ --tui`.
     //
     //   2. **Ctrl/Cmd+Shift+C.**  Belt-and-suspenders shortcut that
     //      operates directly on xterm's selection, useful if the TUI
@@ -480,7 +494,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         term.loadAddon(webgl);
       } catch (err) {
         console.warn(
-          "[hermes-chat] WebGL renderer unavailable; falling back to default",
+          "[iterativ-chat] WebGL renderer unavailable; falling back to default",
           err,
         );
       }
@@ -652,7 +666,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     //
     // For the browser embed we prefer input stability over terminal-style
     // mouse reporting, so we drop SGR mouse reports entirely instead of
-    // forwarding them into Hermes. Keyboard input, paste, and resize still
+    // forwarding them into Iterativ. Keyboard input, paste, and resize still
     // behave normally.
     // eslint-disable-next-line no-control-regex -- intentional ESC byte in xterm SGR mouse report parser
     const SGR_MOUSE_RE = /^\x1b\[<(\d+);(\d+);(\d+)([Mm])$/;
@@ -747,15 +761,13 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   }, [isActive]);
 
   // Layout:
-  //   outer flex column — sits inside the dashboard's content area
-  //   row split — terminal pane (flex-1) + sidebar (fixed width, lg+)
-  //   terminal wrapper — rounded, dark, padded — the "terminal window"
-  //   floating copy button — bottom-right corner, transparent with a
-  //     subtle border; stays out of the way until hovered.  Sends
-  //     `/copy\n` to Ink, which emits OSC 52 → our clipboard handler.
-  //   sidebar — ChatSidebar opens its own JSON-RPC sidecar; renders
-  //     model badge, tool-call list, model picker. Best-effort: if the
-  //     sidecar fails to connect the terminal pane keeps working.
+  //   centered workspace — keeps the PTY-backed chat as the primary surface
+  //   terminal frame — light, padded, and visually quiet
+  //   floating copy button — sends `/copy\n` to Ink, which emits OSC 52 →
+  //     our clipboard handler.
+  //   tools drawer — ChatSidebar opens its own JSON-RPC sidecar for model
+  //     switching and tool events. Best-effort: if the sidecar fails to
+  //     connect the terminal pane keeps working.
   //
   // `normal-case` opts out of the dashboard's global `uppercase` rule on
   // the root `<div>` in App.tsx — terminal output must preserve case.
@@ -777,7 +789,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
             onClick={closeMobilePanel}
             className={cn(
               "fixed inset-0 z-[55] p-0 block",
-              "bg-black/60 backdrop-blur-sm",
+              "bg-stone-950/18 backdrop-blur-sm",
             )}
           />
         )}
@@ -787,11 +799,11 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
           role="complementary"
           aria-label={modelToolsLabel}
           className={cn(
-            "font-mondwest fixed top-0 right-0 z-[60] flex h-dvh max-h-dvh w-64 min-w-0 flex-col antialiased",
-            "border-l border-current/20 text-midground",
-            "bg-background-base/95 backdrop-blur-sm",
+            "fixed top-0 right-0 z-[60] flex h-dvh max-h-dvh w-72 min-w-0 flex-col antialiased",
+            "border-l border-[var(--studio-border-subtle)] text-[var(--studio-text)]",
+            "bg-white/95 backdrop-blur-xl",
             "transition-transform duration-200 ease-out",
-            "[background:var(--component-sidebar-background)]",
+            "[background:var(--component-sidebar-background,rgba(255,255,255,0.95))]",
             "[clip-path:var(--component-sidebar-clip-path)]",
             "[border-image:var(--component-sidebar-border-image)]",
             mobilePanelOpen
@@ -801,12 +813,11 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         >
           <div
             className={cn(
-              "flex h-14 shrink-0 items-center justify-between gap-2 border-b border-current/20 px-5",
+              "flex h-14 shrink-0 items-center justify-between gap-2 border-b border-[var(--studio-border-subtle)] px-5",
             )}
           >
             <Typography
-              className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground"
-              style={{ mixBlendMode: "plus-lighter" }}
+              className="font-sans text-[0.95rem] font-semibold leading-[1.05] tracking-normal text-[var(--studio-text)]"
             >
               {t.app.modelToolsSheetTitle}
               <br />
@@ -818,7 +829,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
               size="icon"
               onClick={closeMobilePanel}
               aria-label={t.app.closeModelTools}
-              className="text-midground/70 hover:text-midground"
+              className="text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]"
             >
               <X />
             </Button>
@@ -837,70 +848,144 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       portalRoot,
     );
 
+  const desktopModelToolsPortal =
+    isActive &&
+    !narrow &&
+    portalRoot &&
+    createPortal(
+      <>
+        {desktopPanelOpen && (
+          <Button
+            ghost
+            aria-label={t.app.closeModelTools}
+            onClick={closeDesktopPanel}
+            className="fixed inset-0 z-[55] block bg-stone-950/10 p-0 backdrop-blur-[2px]"
+          />
+        )}
+
+        <div
+          id="chat-side-panel"
+          role="complementary"
+          aria-label={modelToolsLabel}
+          className={cn(
+            "fixed bottom-3 right-3 top-3 z-[60] flex w-[22rem] min-w-0 flex-col overflow-hidden rounded-[24px]",
+            "border border-[var(--studio-border-subtle)] bg-white/95 text-[var(--studio-text)] shadow-[0_24px_80px_rgba(30,41,59,0.16)] backdrop-blur-xl",
+            "transition-transform duration-200 ease-out",
+            desktopPanelOpen
+              ? "translate-x-0"
+              : "pointer-events-none translate-x-[calc(100%+1rem)]",
+          )}
+        >
+          <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-[var(--studio-border-subtle)] px-5">
+            <Typography className="font-sans text-[0.95rem] font-semibold leading-[1.05] tracking-normal text-[var(--studio-text)]">
+              {t.app.modelToolsSheetTitle}
+              <br />
+              {t.app.modelToolsSheetSubtitle}
+            </Typography>
+
+            <Button
+              ghost
+              size="icon"
+              onClick={closeDesktopPanel}
+              aria-label={t.app.closeModelTools}
+              className="text-[var(--studio-text-muted)] hover:text-[var(--studio-text)]"
+            >
+              <X />
+            </Button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-hidden p-3">
+            <ChatSidebar channel={channel} />
+          </div>
+        </div>
+      </>,
+      portalRoot,
+    );
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 normal-case">
+    <div className="relative flex min-h-0 flex-1 flex-col normal-case">
       <PluginSlot name="chat:top" />
       {mobileModelToolsPortal}
+      {desktopModelToolsPortal}
 
       {banner && (
-        <div className="border border-warning/50 bg-warning/10 text-warning px-3 py-2 text-xs tracking-wide">
+        <div className="mx-auto mb-2 w-full max-w-[1120px] rounded-[12px] border border-warning/50 bg-warning/10 px-3 py-2 text-xs tracking-normal text-warning">
           {banner}
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:gap-3">
-        <div
-          className={cn(
-            "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg",
-            "border border-stone-800 p-2 sm:p-3",
-          )}
-          style={{
-            backgroundColor: TERMINAL_THEME.background,
-            boxShadow: "0 24px 80px rgba(28, 25, 23, 0.28)",
-          }}
-        >
-          <div
-            ref={hostRef}
-            className="hermes-chat-xterm-host min-h-0 min-w-0 flex-1"
-          />
-
+      <div className="chat-clean-shell relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-2 sm:right-5 sm:top-5">
           <Button
             ghost
-            onClick={handleCopyLast}
-            title="Copy last assistant response as raw markdown"
-            aria-label="Copy last assistant response"
+            size="icon"
+            onClick={() => {
+              if (narrow) {
+                setMobilePanelOpenRaw(true);
+              } else {
+                setDesktopPanelOpenRaw(true);
+              }
+            }}
+            title={modelToolsLabel}
+            aria-label={modelToolsLabel}
+            aria-expanded={narrow ? mobilePanelOpen : desktopPanelOpen}
+            aria-controls="chat-side-panel"
             className={cn(
-              "absolute z-10",
-              "rounded border border-current/30",
-              "bg-black/20 backdrop-blur-sm",
-              "opacity-60 hover:opacity-100 hover:border-current/60",
-              "transition-opacity duration-150 normal-case font-normal tracking-normal",
-              "bottom-2 right-2 px-2 py-1 text-[0.65rem] sm:bottom-3 sm:right-3 sm:px-2.5 sm:py-1.5 sm:text-xs",
-              "lg:bottom-4 lg:right-4",
+              "pointer-events-auto inline-flex h-10 w-10 rounded-full border border-[var(--studio-border-subtle)] bg-white/85 text-[var(--studio-text-muted)] shadow-sm backdrop-blur-sm",
+              "hover:bg-white hover:text-[var(--studio-text)]",
             )}
-            style={{ color: TERMINAL_THEME.foreground }}
           >
-            <span className="inline-flex items-center gap-1.5">
-              <Copy className="h-3 w-3 shrink-0" />
-              <span className="hidden min-[400px]:inline tracking-wide">
-                {copyState === "copied" ? "copied" : "copy last response"}
-              </span>
-            </span>
+            <PanelRight className="h-4 w-4" />
           </Button>
         </div>
 
-        {!narrow && (
-          <div
-            id="chat-side-panel"
-            role="complementary"
-            aria-label={modelToolsLabel}
-            className="flex min-h-0 shrink-0 flex-col overflow-hidden lg:h-full lg:w-80"
-          >
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <ChatSidebar channel={channel} />
-            </div>
+        <div
+          className={cn(
+            "mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col px-2 py-3 sm:px-5 sm:py-6 lg:px-8 lg:py-9",
+          )}
+        >
+          <div className="mb-5 shrink-0 text-center sm:mb-7">
+            <Typography className="font-sans text-[2rem] font-semibold leading-none tracking-normal text-[var(--studio-text)] sm:text-[2.5rem]">
+              iterativ <span className="font-normal">agent</span>
+            </Typography>
           </div>
-        )}
+
+          <div
+            className={cn(
+              "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[24px]",
+              "border border-[var(--studio-border-subtle)] bg-[var(--studio-surface-raised)] p-2 sm:p-3",
+              "shadow-[0_20px_60px_rgba(30,41,59,0.10)]",
+            )}
+          >
+            <div
+              ref={hostRef}
+              className="iterativ-chat-xterm-host min-h-0 min-w-0 flex-1"
+            />
+
+            <Button
+              ghost
+              onClick={handleCopyLast}
+              title="Copy last assistant response as raw markdown"
+              aria-label="Copy last assistant response"
+              className={cn(
+                "absolute z-10",
+                "rounded-full border border-[var(--studio-border-subtle)]",
+                "bg-white/80 text-[var(--studio-text-muted)] backdrop-blur-sm",
+                "opacity-75 hover:bg-white hover:text-[var(--studio-text)] hover:opacity-100",
+                "transition-opacity duration-150 normal-case font-normal tracking-normal",
+                "bottom-2 right-2 px-2 py-1 text-[0.65rem] sm:bottom-3 sm:right-3 sm:px-2.5 sm:py-1.5 sm:text-xs",
+                "lg:bottom-4 lg:right-4",
+              )}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Copy className="h-3 w-3 shrink-0" />
+                <span className="hidden min-[400px]:inline tracking-wide">
+                  {copyState === "copied" ? "copied" : "copy last response"}
+                </span>
+              </span>
+            </Button>
+          </div>
+        </div>
       </div>
       <PluginSlot name="chat:bottom" />
     </div>
@@ -909,6 +994,6 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
 
 declare global {
   interface Window {
-    __HERMES_SESSION_TOKEN__?: string;
+    __ITERATIV_SESSION_TOKEN__?: string;
   }
 }

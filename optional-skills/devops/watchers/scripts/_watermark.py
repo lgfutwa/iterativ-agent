@@ -32,9 +32,9 @@ def _state_dir() -> Path:
     override = os.environ.get("WATCHER_STATE_DIR")
     if override:
         return Path(override)
-    # Default: $HERMES_HOME/watcher-state/, falling back to ~/.hermes/watcher-state/.
-    hermes_home = os.environ.get("HERMES_HOME") or str(Path.home() / ".hermes")
-    return Path(hermes_home) / "watcher-state"
+    # Default: $HERMES_HOME/watcher-state/, falling back to ~/.iterativ/watcher-state/.
+    iterativ_home = os.environ.get("HERMES_HOME") or str(Path.home() / ".iterativ")
+    return Path(iterativ_home) / "watcher-state"
 
 
 class Watermark:

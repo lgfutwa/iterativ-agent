@@ -1,0 +1,4 @@
+[console_scripts]
+iterativ = iterativ_cli.main:main
+iterativ-acp = acp_adapter.entry:main
+iterativ-agent = run_agent:main

@@ -32,13 +32,13 @@ class TestWriteDenyExactPaths:
         path = os.path.join(str(Path.home()), ".netrc")
         assert _is_write_denied(path) is True
 
-    def test_hermes_env(self):
-        # ``.env`` under the active HERMES_HOME (profile-aware, not just
-        # ``~/.hermes``) must be write-denied. The hermetic test conftest
-        # points HERMES_HOME at a tempdir — resolve via get_hermes_home()
+    def test_iterativ_env(self):
+        # ``.env`` under the active ITERATIV_HOME (profile-aware, not just
+        # ``~/.iterativ``) must be write-denied. The hermetic test conftest
+        # points ITERATIV_HOME at a tempdir — resolve via get_iterativ_home()
         # to match the denylist.
-        from hermes_constants import get_hermes_home
-        path = str(get_hermes_home() / ".env")
+        from iterativ_constants import get_iterativ_home
+        path = str(get_iterativ_home() / ".env")
         assert _is_write_denied(path) is True
 
     def test_shell_profiles(self):
@@ -83,6 +83,6 @@ class TestWriteAllowed:
     def test_project_file(self):
         assert _is_write_denied("/home/user/project/main.py") is False
 
-    def test_hermes_config_not_env(self):
-        path = os.path.join(str(Path.home()), ".hermes", "config.yaml")
+    def test_iterativ_config_not_env(self):
+        path = os.path.join(str(Path.home()), ".iterativ", "config.yaml")
         assert _is_write_denied(path) is False

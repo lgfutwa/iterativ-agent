@@ -55,7 +55,7 @@ export const es: Translations = {
     closeNavigation: "Cerrar navegación",
     closeModelTools: "Cerrar modelo y herramientas",
     footer: {
-      org: "Nous Research",
+      org: "Iterativ Knowledge",
     },
     activeSessionsLabel: "Sesiones activas:",
     gatewayStatusLabel: "Estado del Gateway:",
@@ -120,8 +120,8 @@ export const es: Translations = {
     starting: "Iniciando",
     startedInBackground: "Iniciado en segundo plano — revisa los registros para ver el progreso",
     stopped: "Detenido",
-    updateHermes: "Actualizar Hermes",
-    updatingHermes: "Actualizando Hermes…",
+    updateIterativ: "Actualizar Iterativ",
+    updatingIterativ: "Actualizando Iterativ…",
     waitingForOutput: "Esperando salida…",
   },
 
@@ -266,7 +266,7 @@ export const es: Translations = {
     enableRuntime: "Habilitar",
     forceReinstall: "Forzar reinstalación (eliminar carpeta existente primero)",
     headline:
-      "Descubre, instala, habilita y actualiza complementos de Hermes (equivalente a `hermes plugins`).",
+      "Descubre, instala, habilita y actualiza complementos de Hermes (equivalente a `iterativ plugins`).",
     identifierLabel: "URL de Git u owner/repo",
     inactive: "inactivo",
     installBtn: "Instalar desde Git",
@@ -283,8 +283,8 @@ export const es: Translations = {
     providersHint:
       "Escribe memory.provider (vacío = incorporado) y context.engine en config.yaml. Surte efecto en la próxima sesión.",
     refreshDashboard: "Volver a escanear extensiones del panel",
-    removeConfirm: "¿Eliminar este complemento de ~/.hermes/plugins/?",
-    removeHint: "Solo se pueden eliminar complementos instalados por el usuario en ~/.hermes/plugins.",
+    removeConfirm: "¿Eliminar este complemento de ~/.iterativ/plugins/?",
+    removeHint: "Solo se pueden eliminar complementos instalados por el usuario en ~/.iterativ/plugins.",
     rescanHeading: "Registro de complementos SPA",
     rescanHint: "Vuelve a escanear tras añadir archivos en disco para que la barra lateral del panel detecte nuevos manifiestos.",
     runtimeHeading: "Tiempo de ejecución del Gateway (complementos YAML)",
@@ -306,7 +306,7 @@ export const es: Translations = {
     all: "Todas",
     categories: "Categorías",
     filters: "Filtros",
-    noSkills: "No se encontraron habilidades. Las habilidades se cargan desde ~/.hermes/skills/",
+    noSkills: "No se encontraron habilidades. Las habilidades se cargan desde ~/.iterativ/skills/",
     noSkillsMatch: "Ninguna habilidad coincide con tu búsqueda o filtro.",
     skillCount: "{count} habilidad{s}",
     resultCount: "{count} resultado{s}",
@@ -320,7 +320,7 @@ export const es: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.iterativ/config.yaml",
     filters: "Filtros",
     sections: "Secciones",
     exportConfig: "Exportar configuración como JSON",

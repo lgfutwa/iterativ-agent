@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@hermes/ink": ["src/types/hermes-ink.d.ts"]
+      "@iterativ/ink": ["src/types/iterativ-ink.d.ts"]
     }
   }
 }

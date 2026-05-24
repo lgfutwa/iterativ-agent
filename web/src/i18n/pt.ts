@@ -55,7 +55,7 @@ export const pt: Translations = {
     closeNavigation: "Fechar navegação",
     closeModelTools: "Fechar modelo e ferramentas",
     footer: {
-      org: "Nous Research",
+      org: "Iterativ Knowledge",
     },
     activeSessionsLabel: "Sessões ativas:",
     gatewayStatusLabel: "Estado do gateway:",
@@ -120,8 +120,8 @@ export const pt: Translations = {
     starting: "A iniciar",
     startedInBackground: "Iniciado em segundo plano — verifique os registos para acompanhar",
     stopped: "Parado",
-    updateHermes: "Atualizar Hermes",
-    updatingHermes: "A atualizar Hermes…",
+    updateIterativ: "Atualizar Iterativ",
+    updatingIterativ: "A atualizar Iterativ…",
     waitingForOutput: "À espera de saída…",
   },
 
@@ -266,7 +266,7 @@ export const pt: Translations = {
     enableRuntime: "Ativar",
     forceReinstall: "Forçar reinstalação (eliminar pasta existente primeiro)",
     headline:
-      "Descobrir, instalar, ativar e atualizar plugins Hermes (paridade com `hermes plugins`).",
+      "Descobrir, instalar, ativar e atualizar plugins Hermes (paridade com `iterativ plugins`).",
     identifierLabel: "URL Git ou owner/repo",
     inactive: "inativo",
     installBtn: "Instalar a partir do Git",
@@ -283,8 +283,8 @@ export const pt: Translations = {
     providersHint:
       "Escreve memory.provider (vazio = incorporado) e context.engine no config.yaml. Aplicado na próxima sessão.",
     refreshDashboard: "Re-analisar extensões do dashboard",
-    removeConfirm: "Remover este plugin de ~/.hermes/plugins/?",
-    removeHint: "Apenas plugins instalados pelo utilizador em ~/.hermes/plugins podem ser removidos.",
+    removeConfirm: "Remover este plugin de ~/.iterativ/plugins/?",
+    removeHint: "Apenas plugins instalados pelo utilizador em ~/.iterativ/plugins podem ser removidos.",
     rescanHeading: "Registo de plugins SPA",
     rescanHint: "Re-analise depois de adicionar ficheiros em disco para que a barra lateral detete novos manifestos.",
     runtimeHeading: "Runtime do gateway (plugins YAML)",
@@ -306,7 +306,7 @@ export const pt: Translations = {
     all: "Todas",
     categories: "Categorias",
     filters: "Filtros",
-    noSkills: "Nenhuma competência encontrada. As competências são carregadas de ~/.hermes/skills/",
+    noSkills: "Nenhuma competência encontrada. As competências são carregadas de ~/.iterativ/skills/",
     noSkillsMatch: "Nenhuma competência corresponde à pesquisa ou filtro.",
     skillCount: "{count} competência{s}",
     resultCount: "{count} resultado{s}",
@@ -320,7 +320,7 @@ export const pt: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.iterativ/config.yaml",
     filters: "Filtros",
     sections: "Secções",
     exportConfig: "Exportar configuração como JSON",
